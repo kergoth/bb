@@ -1,0 +1,17 @@
+#!/bin/sh
+
+repl=$(type -p repl 2>/dev/null)
+if [ $? -ne 0 ]; then
+    echo >&2 "Error: 'repl' must be installed to run the bb shell"
+    exit 1
+fi
+
+rlwrap=$(type -p rlwrap 2>/dev/null)
+if [ $? -ne 0 ]; then
+    echo >&2 "Warning: the bb shell is less functional without 'rlwrap' installed"
+fi
+
+mkdir -p ~/.repl
+bb commands >~/.repl/bb
+
+repl bb
