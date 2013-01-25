@@ -1,4 +1,6 @@
 #!/bin/sh
+# Usage: bb shell
+# Summary: Enter an interactive mode shell (repl)
 
 repl=$(type -p repl 2>/dev/null)
 if [ $? -ne 0 ]; then
