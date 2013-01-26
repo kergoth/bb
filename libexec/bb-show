@@ -189,14 +189,6 @@ def sorted_variables(data, variables=None, show_deps=True):
     return variables
 
 def show(args):
-    log_format = bbcmd.Formatter("%(levelname)s: %(message)s")
-    if sys.stderr.isatty():
-        log_format.enable_color()
-    console = logging.StreamHandler(sys.stderr)
-    console.setFormatter(log_format)
-    console.setLevel(logging.INFO)
-    logger.addHandler(console)
-
     tinfoil = bbcmd.Tinfoil(output=sys.stderr)
     tinfoil.prepare(config_only=True)
 
@@ -226,8 +218,6 @@ def show(args):
 
 
 def main(arguments):
-    bbcmd.setup_logger(logger)
-
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--dependencies', action='store_true',
             help='also show functions the vars depend on')

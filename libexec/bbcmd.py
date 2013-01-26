@@ -23,15 +23,6 @@ class Terminate(BaseException):
     pass
 
 
-class Formatter(bb.msg.BBLogFormatter):
-    def __init__(self, fmt=None, datefmt=None, output=sys.stdout):
-        bb.msg.BBLogFormatter.__init__(self, fmt, datefmt)
-        self.output = output
-
-    def enable_color(self):
-        self.color_enabled = True
-
-
 # TODO: Let bb.tinfoil.Tinfoil support output files other than stdout, and to
 # enable color support in the formatter when it's a tty.
 class Tinfoil(bb.tinfoil.Tinfoil):
@@ -41,13 +32,7 @@ class Tinfoil(bb.tinfoil.Tinfoil):
 
         # Set up logging
         self.logger = logging.getLogger('BitBake')
-        console = logging.StreamHandler(output)
-        format = Formatter("%(levelname)s: %(message)s", output=output)
-        if output.isatty():
-            format.enable_color()
-        bb.msg.addDefaultlogFilter(console)
-        console.setFormatter(format)
-        self.logger.addHandler(console)
+        setup_logger(self.logger, output)
 
         initialenv = os.environ.copy()
         bb.utils.clean_environment()
@@ -59,13 +44,14 @@ class Tinfoil(bb.tinfoil.Tinfoil):
         self.cooker_data = None
 
 
-def setup_logger(logger):
-    log_format = Formatter("%(levelname)s: %(message)s")
-    if sys.stderr.isatty():
+def setup_logger(logger, output=sys.stderr):
+    log_format = bb.msg.BBLogFormatter("%(levelname)s: %(message)s")
+    if output.isatty():
         log_format.enable_color()
-    console = logging.StreamHandler(sys.stderr)
+    console = logging.StreamHandler(output)
     console.setFormatter(log_format)
 
+    bb.msg.addDefaultlogFilter(console)
     logger.addHandler(console)
     logger.setLevel(logging.INFO)
 
