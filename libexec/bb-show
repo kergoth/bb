@@ -13,7 +13,7 @@ import bb.cache
 import bb.codeparser
 
 
-logger = logging.getLogger('bb-show')
+logger = logging.getLogger('bb.show')
 
 
 def get_data(tinfoil, recipe=None):
