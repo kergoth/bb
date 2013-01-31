@@ -19,6 +19,10 @@ logger = logging.getLogger('bb.whatdepends')
 def whatdepends(args):
     """Show what depends on the specified target"""
 
+    # tinfoil sets up log output for the bitbake loggers, but bb uses
+    # a separate namespace at this time
+    bbcmd.setup_log_handler(logging.getLogger('bb'))
+
     tinfoil = bbcmd.Tinfoil(output=sys.stderr)
     tinfoil.prepare()
 
@@ -36,8 +40,6 @@ def whatdepends(args):
 
 
 def main(arguments):
-    bbcmd.setup_logger(logger)
-
     parser = argparse.ArgumentParser()
     parser.add_argument('-r', '--recursive', action='store_true',
             help='operate recursively, with indent reflecting depth')

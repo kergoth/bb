@@ -189,6 +189,10 @@ def sorted_variables(data, variables=None, show_deps=True):
     return variables
 
 def show(args):
+    # tinfoil sets up log output for the bitbake loggers, but bb uses
+    # a separate namespace at this time
+    bbcmd.setup_log_handler(logging.getLogger('bb'))
+
     tinfoil = bbcmd.Tinfoil(output=sys.stderr)
     tinfoil.prepare(config_only=True)
 
