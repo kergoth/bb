@@ -32,7 +32,7 @@ def whatdepends(args):
 
     for recipe in recipes:
         recipe_id = tinfoil.get_buildid(recipe)
-        if not recipe_id:
+        if recipe_id is None:
             # Not buildable or recipe doesn't exist, abort
             return 1
 

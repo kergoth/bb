@@ -21,7 +21,7 @@ def get_data(tinfoil, recipe=None):
         tinfoil.prepare()
         tinfoil.prepare_taskdata([recipe])
         targetid = tinfoil.get_buildid(recipe)
-        if not targetid:
+        if targetid is None:
             return
 
         fnid = taskdata.build_targets[targetid][0]
