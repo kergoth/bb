@@ -1,0 +1,53 @@
+#!/usr/bin/env python
+# Usage: bb-show [-h] [-d] [-f] [-r RECIPE] [variables [variables ...]]
+# Summary: Show bitbake metadata (global or recipe)
+
+import argparse
+import logging
+import os
+import sys
+import warnings
+import bbcmd
+import bb
+import bb.cache
+import bb.codeparser
+
+
+logger = logging.getLogger('bb.whatdepends')
+
+
+def whatdepends(args):
+    """Show what depends on the specified target"""
+
+    tinfoil = bbcmd.Tinfoil(output=sys.stderr)
+    tinfoil.prepare()
+
+    providers = list(args.recipes)
+    providers.append(args.target)
+    tinfoil.prepare_taskdata(providers)
+
+    targetid = tinfoil.taskdata.getbuild_id(args.target)
+    if args.recursive:
+        for dep_id, depth in tinfoil.rec_get_dependees(targetid):
+            print('  '*depth + tinfoil.taskdata.build_names_index[dep_id])
+    else:
+        for dep_fnid, dep_id in tinfoil.get_dependees(targetid, seen=set()):
+            print(tinfoil.taskdata.build_names_index[dep_id])
+
+
+def main(arguments):
+    bbcmd.setup_logger(logger)
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-r', '--recursive', action='store_true',
+            help='operate recursively, with indent reflecting depth')
+    parser.add_argument('target')
+    parser.add_argument('recipes', default=['universe'], nargs='*',
+            help='recipes to check for dependencies on target (default: universe)')
+
+    args = parser.parse_args(arguments)
+    return whatdepends(args)
+
+
+if __name__ == '__main__':
+    bbcmd.run_main(main)
