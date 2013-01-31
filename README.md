@@ -30,7 +30,7 @@ Usage
        commands     List all bb commands
        shell        Enter an interactive mode shell (repl)
        show         Show bitbake metadata (global or recipe)
-       whatdepends  Show bitbake metadata (global or recipe)
+       whatdepends  Show what depends on the specified target
 
 
     bb show [-h] [-d] [-f] [-r RECIPE] [variables [variables ...]]
