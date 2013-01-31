@@ -30,7 +30,8 @@ class Tinfoil(bb.tinfoil.Tinfoil):
 
         # Set up logging
         self.logger = logging.getLogger('BitBake')
-        setup_logger(self.logger, output)
+        if output is not None:
+            setup_log_handler(self.logger, output)
 
         initialenv = os.environ.copy()
         bb.utils.clean_environment()
@@ -104,15 +105,15 @@ class Tinfoil(bb.tinfoil.Tinfoil):
                     yield dep_fnid, target
 
 
-def setup_logger(logger, output=sys.stderr):
+def setup_log_handler(logger, output=sys.stderr):
     log_format = bb.msg.BBLogFormatter("%(levelname)s: %(message)s")
     if output.isatty():
         log_format.enable_color()
-    console = logging.StreamHandler(output)
-    console.setFormatter(log_format)
+    handler = logging.StreamHandler(output)
+    handler.setFormatter(log_format)
 
-    bb.msg.addDefaultlogFilter(console)
-    logger.addHandler(console)
+    bb.msg.addDefaultlogFilter(handler)
+    logger.addHandler(handler)
     logger.setLevel(logging.INFO)
 
 
