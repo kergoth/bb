@@ -64,6 +64,9 @@ bash | zsh )
 esac
 
 commands=(`bb commands --sh`)
+if [ ${#commands} -eq 0 ]; then
+    commands[1]="' '"
+fi
 IFS="|"
 cat <<EOS
 _bb_wrapper() {
