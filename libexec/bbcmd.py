@@ -44,14 +44,14 @@ class Tinfoil(bb.tinfoil.Tinfoil):
         self.cooker_data = None
         self.taskdata = None
 
-    def prepare_taskdata(self, provided=None, rprovided=None):
-        self.cache_data = self.cooker.status
-
         self.localdata = bb.data.createCopy(self.config_data)
         self.localdata.finalize()
         # TODO: why isn't expandKeys a method of DataSmart?
         bb.data.expandKeys(self.localdata)
 
+
+    def prepare_taskdata(self, provided=None, rprovided=None):
+        self.cache_data = self.cooker.status
         if self.taskdata is None:
             self.taskdata = bb.taskdata.TaskData(abort=False)
 
@@ -103,6 +103,17 @@ class Tinfoil(bb.tinfoil.Tinfoil):
             for target in self.taskdata.build_targets:
                 if dep_fnid in self.taskdata.build_targets[target]:
                     yield dep_fnid, target
+
+    def get_buildid(self, target):
+        if not self.taskdata.have_build_target(target):
+            reasons = self.taskdata.get_reasons(target)
+            if reasons:
+                self.logger.error("No buildable '%s' recipe found:\n%s", target, "\n".join(reasons))
+            else:
+                self.logger.error("No '%s' recipe found", target)
+            return
+        else:
+            return self.taskdata.getbuild_id(target)
 
 
 def setup_log_handler(logger, output=sys.stderr):

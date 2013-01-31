@@ -31,14 +31,10 @@ def whatdepends(args):
     tinfoil.prepare_taskdata(recipes)
 
     for recipe in recipes:
-        if not tinfoil.taskdata.have_build_target(recipe):
-            reasons = tinfoil.taskdata.get_reasons(recipe)
-            if reasons:
-                logger.error("No buildable '%s' recipe found:\n%s", recipe, "\n".join(reasons))
-            else:
-                logger.error("No '%s' recipe found", recipe)
+        recipe_id = tinfoil.get_buildid(recipe)
+        if not recipe_id:
+            # Not buildable or recipe doesn't exist, abort
             return 1
-
 
     targetid = tinfoil.taskdata.getbuild_id(args.target)
     if args.recursive:

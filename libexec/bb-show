@@ -17,35 +17,25 @@ logger = logging.getLogger('bb.show')
 
 
 def get_data(tinfoil, recipe=None):
-    localdata = bb.data.createCopy(tinfoil.config_data)
-    localdata.finalize()
-    # TODO: why isn't expandKeys a method of DataSmart?
-    bb.data.expandKeys(localdata)
-
     if recipe:
-        taskdata = bb.taskdata.TaskData(abort=False)
-        taskdata.add_provider(localdata, tinfoil.cooker.status, recipe)
-
-        if not taskdata.have_build_target(recipe):
-            reasons = taskdata.get_reasons(recipe)
-            if reasons:
-                logger.error("No buildable '%s' recipe found:\n%s", recipe, "\n".join(reasons))
-            else:
-                logger.error("No '%s' recipe found", recipe)
+        tinfoil.prepare()
+        tinfoil.prepare_taskdata([recipe])
+        targetid = tinfoil.get_buildid(recipe)
+        if not targetid:
             return
-        else:
-            targetid = taskdata.getbuild_id(recipe)
+
         fnid = taskdata.build_targets[targetid][0]
         fn = taskdata.fn_index[fnid]
 
         try:
-            envdata = bb.cache.Cache.loadDataFull(fn, tinfoil.cooker.get_file_appends(fn),
+            recipe_data = bb.cache.Cache.loadDataFull(fn, tinfoil.cooker.get_file_appends(fn),
                                                   tinfoil.config_data)
         except Exception:
             logger.exception("Unable to read %s", fn)
             raise
-        return envdata
-    return localdata
+        return recipe_data
+    else:
+        return tinfoil.localdata
 
 
 # TODO: enhance bb.data.emit* to function more flexibly, like these
