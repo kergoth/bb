@@ -26,9 +26,19 @@ def whatdepends(args):
     tinfoil = bbcmd.Tinfoil(output=sys.stderr)
     tinfoil.prepare()
 
-    providers = list(args.recipes)
-    providers.append(args.target)
-    tinfoil.prepare_taskdata(providers)
+    recipes = list(args.recipes)
+    recipes.append(args.target)
+    tinfoil.prepare_taskdata(recipes)
+
+    for recipe in recipes:
+        if not tinfoil.taskdata.have_build_target(recipe):
+            reasons = tinfoil.taskdata.get_reasons(recipe)
+            if reasons:
+                logger.error("No buildable '%s' recipe found:\n%s", recipe, "\n".join(reasons))
+            else:
+                logger.error("No '%s' recipe found", recipe)
+            return 1
+
 
     targetid = tinfoil.taskdata.getbuild_id(args.target)
     if args.recursive:
