@@ -28,11 +28,6 @@ Subcommands
 
 - `edit`
 
-  - Add an argument to prompt for the file to edit rather than opening them
-    all in the editor. This is low priority, but I can imagine cases where it
-    could be of use. For example, if you're stuck with busybox vi, using the
-    prompt would probably be better.
-    This command will spawn the user's editor (`$EDITOR` or `$VISUAL`) with
   - Add the ability to cross over into the package namespace when/if
     appropriate, in case the user doesn't actually know the recipe that
     provides what they want to edit. Add an argument to specify it explicitly,
