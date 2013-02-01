@@ -4,13 +4,8 @@
 # Help: See bb whatdepends -h for detailed usage information.
 
 import logging
-import os
 import sys
-import warnings
 import bbcmd
-import bb
-import bb.cache
-import bb.codeparser
 
 
 logger = logging.getLogger('bb.whatdepends')
@@ -36,7 +31,7 @@ def whatdepends(args):
             # Not buildable or recipe doesn't exist, abort
             return 1
 
-    targetid = tinfoil.taskdata.getbuild_id(args.target)
+    targetid = tinfoil.get_buildid(args.target)
     if args.recursive:
         for dep_id, depth in tinfoil.rec_get_dependees(targetid):
             print('  '*depth + tinfoil.taskdata.build_names_index[dep_id])
@@ -53,7 +48,7 @@ def main(arguments):
     parser.add_argument('target')
     parser.add_argument('recipes', default=['universe'], nargs='*',
             help='recipes to check for dependencies on target (default: universe)')
-    args = parser.parse_args()
+    args = parser.parse_args(arguments)
     if args is None:
         # showing completions
         return

@@ -95,7 +95,6 @@ class Tinfoil(bb.tinfoil.Tinfoil):
                 yield _id, _depth
 
     def get_dependees(self, targetid, seen):
-        fnid = self.taskdata.build_targets[targetid][0]
         dep_fnids = self.taskdata.get_dependees(targetid)
         for dep_fnid in dep_fnids:
             if dep_fnid in seen:
