@@ -1,0 +1,94 @@
+#!/usr/bin/env python
+# Usage: bb edit [-h] [-r] target [target ...]
+# Summary: edit bitbake recipes, included files, and bbappends
+# Help: See bb edit -h for detailed usage information.
+
+import logging
+import os
+import pipes
+import sys
+import warnings
+import bbcmd
+import bb
+import bb.cache
+import bb.codeparser
+
+
+logger = logging.getLogger('bb.edit')
+
+
+def targets_to_files(tinfoil, targets, with_includes=True):
+    files = []
+    for target in targets:
+        targetid = tinfoil.get_buildid(target)
+        if targetid is None:
+            return
+
+        fnid = tinfoil.taskdata.build_targets[targetid][0]
+        fn = tinfoil.taskdata.fn_index[fnid]
+        appends = tinfoil.cooker.get_file_appends(fn)
+
+        try:
+            recipe_data = bb.cache.Cache.loadDataFull(fn, tinfoil.cooker.get_file_appends(fn),
+                                                      tinfoil.config_data)
+        except Exception:
+            logger.exception("Unable to read %s", fn)
+            return
+
+        files.append(fn)
+
+        if with_includes:
+            cfg_included = tinfoil.localdata.getVar('BBINCLUDED', True).split()
+            recipe_included = recipe_data.getVar('BBINCLUDED', True).split()
+            final_included = [f for f in (set(recipe_included) - set(cfg_included)) if not f.endswith('.bbclass')]
+
+            files.extend(final_included)
+
+        files.extend(appends)
+    return list(iter_uniq(files))
+
+
+# Yield unique elements of an iterable
+def iter_uniq(iterable):
+    seen = set()
+    for i in iterable:
+        if i not in seen:
+            seen.add(i)
+            yield i
+
+
+def edit(args):
+    # tinfoil sets up log output for the bitbake loggers, but bb uses
+    # a separate namespace at this time
+    bbcmd.setup_log_handler(logging.getLogger('bb'))
+
+    tinfoil = bbcmd.Tinfoil(output=sys.stderr)
+    tinfoil.prepare()
+    tinfoil.prepare_taskdata(args.targets)
+
+    files_to_edit = targets_to_files(tinfoil, args.targets, with_includes=not args.just_recipes)
+    if files_to_edit is None:
+        return 1
+
+    logger.info("Editing these files:\n%s", ''.join(f + '\n' for f in files_to_edit))
+    editor = os.getenv('VISUAL') or os.getenv('EDITOR') or 'vi'
+    os.system(editor + ' ' + ' '.join(pipes.quote(arg) for arg in files_to_edit))
+
+
+# provide bb completions
+def main(arguments):
+    parser = bbcmd.CompleteParser()
+    parser.add_argument('-r', '--just-recipes', action='store_true',
+                        help='only edit recipes and appends, not included files')
+    parser.add_argument('targets', nargs='+', help='targets to edit')
+
+    args = parser.parse_args(arguments)
+    if args is None:
+        # showing completions
+        return
+    else:
+        return edit(args)
+
+
+if __name__ == '__main__':
+    bbcmd.run_main(main)

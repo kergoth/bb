@@ -28,13 +28,15 @@ Subcommands
 
 - `edit`
 
-  This command will spawn the user's editor (`$EDITOR` or `$VISUAL`) with
-  the specified recipe and its bbappends. It will have a command-line
-  option to control whether all specified files are opened, or whether
-  a prompt is shown to select which to edit. It should not support
-  patterns, only targets, but those targets should also attempt the
-  package namespace if it failed to discover it in the recipe namespace,
-  potentially prompting or warning when crossing this boundary.
+  - Add an argument to prompt for the file to edit rather than opening them
+    all in the editor. This is low priority, but I can imagine cases where it
+    could be of use. For example, if you're stuck with busybox vi, using the
+    prompt would probably be better.
+    This command will spawn the user's editor (`$EDITOR` or `$VISUAL`) with
+  - Add the ability to cross over into the package namespace when/if
+    appropriate, in case the user doesn't actually know the recipe that
+    provides what they want to edit. Add an argument to specify it explicitly,
+    also, and show a warning message if automatically crossing namespaces.
 
 - `showprovides`
 
