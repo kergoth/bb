@@ -18,18 +18,17 @@ logger = logging.getLogger('bb.show')
 
 def get_data(tinfoil, recipe=None):
     if recipe:
-        tinfoil.prepare()
         tinfoil.prepare_taskdata([recipe])
         targetid = tinfoil.get_buildid(recipe)
         if targetid is None:
             return
 
-        fnid = taskdata.build_targets[targetid][0]
-        fn = taskdata.fn_index[fnid]
+        fnid = tinfoil.taskdata.build_targets[targetid][0]
+        fn = tinfoil.taskdata.fn_index[fnid]
 
         try:
             recipe_data = bb.cache.Cache.loadDataFull(fn, tinfoil.cooker.get_file_appends(fn),
-                                                  tinfoil.config_data)
+                                                      tinfoil.config_data)
         except Exception:
             logger.exception("Unable to read %s", fn)
             raise
@@ -186,21 +185,10 @@ def show(args):
     tinfoil = bbcmd.Tinfoil(output=sys.stderr)
     tinfoil.prepare(config_only=True)
 
-    ignore = tinfoil.config_data.getVar("ASSUME_PROVIDED", True) or ""
-    if args.recipe and args.recipe in ignore.split():
-        logger.warn("%s is in ASSUME_PROVIDED" % args.recipe)
-
-    # Let us show the recipe even if it is in ASSUME_PROVIDED
-    # TODO: let bitbake -e support showing assumed recipes, the way this does
-    tinfoil.config_data.setVar("ASSUME_PROVIDED", "")
-
     if args.recipe:
         tinfoil.parseRecipes()
 
-    if args.recipe:
-        data = get_data(tinfoil, args.recipe)
-    else:
-        data = get_data(tinfoil)
+    data = get_data(tinfoil, args.recipe)
     if not data:
         return 1
 
