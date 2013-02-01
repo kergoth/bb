@@ -18,6 +18,7 @@ logger = logging.getLogger('bb.edit')
 
 
 def prompt(filenames):
+    """Show a basic menu to select a file to edit"""
     while True:
         for number, filename in enumerate(filenames):
             print('{}) {}'.format(number, filename))
@@ -46,12 +47,18 @@ def prompt(filenames):
 
 
 def run_editor(files):
+    """Run the user's editor of choice editing the specified files"""
     logger.info("Editing these files:\n%s", ''.join(f + '\n' for f in files))
     editor = os.getenv('VISUAL') or os.getenv('EDITOR') or 'vi'
     os.system(editor + ' ' + ' '.join(pipes.quote(arg) for arg in files))
 
 
 def targets_to_files(tinfoil, targets, with_includes=True):
+    """Return the filenames corresponding to the requested targets.
+
+    This includes bbappends, and can optionally also include included files
+    (e.g. .inc files).
+    """
     files = []
     for target in targets:
         targetid = tinfoil.get_buildid(target)
@@ -83,8 +90,8 @@ def targets_to_files(tinfoil, targets, with_includes=True):
     return list(iter_uniq(files))
 
 
-# Yield unique elements of an iterable
 def iter_uniq(iterable):
+    """Yield unique elements of an iterable"""
     seen = set()
     for i in iterable:
         if i not in seen:
