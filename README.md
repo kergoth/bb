@@ -17,8 +17,7 @@ Known Issues
 To Install
 ----------
 
-Add the bin directory to the PATH, or symlink bin/bb to a directory in your
-PATH (e.g. ~/bin or /usr/local/bin)
+Run bin/bb init for installation instructions.
 
 
 Usage
