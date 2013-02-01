@@ -21,18 +21,18 @@ Subcommands
 
 - `search`
 
-  This command will let the user search for something they can build. It
-  will handle both recipes and packages, and will check both `PROVIDES`
-  and `RPROVIDES`. This should be able to support multiple modes of operation:
-  exact match, substring, wildcards, regex.
+    - Add the ability to search the runtime target namespace rather than build
+      target namespace, via command-line options.
+    - Consider adding the ability to automatically cross the namespace
+      boundaries automatically when no namespace is specified.
 
 - `edit`
 
-  - Sort the appends in layer priority order
-  - Add the ability to cross over into the package namespace when/if
-    appropriate, in case the user doesn't actually know the recipe that
-    provides what they want to edit. Add an argument to specify it explicitly,
-    also, and show a warning message if automatically crossing namespaces.
+    - Sort the appends in layer priority order
+    - Add the ability to cross over into the package namespace when/if
+      appropriate, in case the user doesn't actually know the recipe that
+      provides what they want to edit. Add an argument to specify it explicitly,
+      also, and show a warning message if automatically crossing namespaces.
 
 - `showprovides`
 

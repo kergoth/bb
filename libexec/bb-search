@@ -1,0 +1,111 @@
+#!/usr/bin/env python
+# Usage: bb search [-h] [-i] [-S SCOPE] [-s | -e | -r | -w] pattern
+# Summary: search for bitbake recipes/targets
+# Help: See bb search -h for detailed usage information.
+#
+# Currently, only the bitbake build target namespace is searched (recipes,
+# PROVIDES).
+
+import fnmatch
+import logging
+import os
+import re
+import sys
+import warnings
+import bbcmd
+import bb
+import bb.cache
+import bb.codeparser
+
+
+logger = logging.getLogger('bb.search')
+
+
+def search_for_recipe(tinfoil, pattern, searchfunc):
+    for provide, fns in tinfoil.cooker.status.providers.iteritems():
+        if searchfunc(pattern, provide):
+            eligible, foundUnique = bb.providers.filterProviders(fns, provide, tinfoil.localdata,
+                                                                 tinfoil.cooker.status)
+            yield provide, eligible[0]
+
+
+def scoped_search_for_recipe(tinfoil, pattern, searchfunc, scope='world'):
+    tinfoil.prepare_taskdata([scope])
+    for targetid in tinfoil.taskdata.build_targets:
+        target = tinfoil.taskdata.build_names_index[targetid]
+        if searchfunc(pattern, target):
+            fnid = tinfoil.taskdata.build_targets[targetid][0]
+            yield target, tinfoil.taskdata.fn_index[fnid]
+
+
+def search(args):
+    # tinfoil sets up log output for the bitbake loggers, but bb uses
+    # a separate namespace at this time
+    bbcmd.setup_log_handler(logging.getLogger('bb'))
+
+    tinfoil = bbcmd.Tinfoil(output=sys.stderr)
+    tinfoil.prepare()
+
+    if args.wildcard:
+        if args.ignore_case:
+            search = lambda pattern, string: fnmatch.fnmatch(string, pattern)
+        else:
+            search = lambda pattern, string: fnmatch.fnmatchcase(string, pattern)
+    elif args.regex:
+        flags = 0
+        if args.ignore_case:
+            flags |= re.IGNORECASE
+        args.pattern = re.compile(args.pattern, flags)
+        search = lambda pattern, string: pattern.search(string)
+    elif args.exact:
+        if args.ignore_case:
+            search = lambda pattern, string: pattern.upper() == string.upper()
+        else:
+            search = lambda pattern, string: pattern == string
+    elif args.substring:
+        if args.ignore_case:
+            search = lambda pattern, string: pattern.upper() in string.upper()
+        else:
+            search = lambda pattern, string: pattern in string
+
+    if args.scope:
+        results = dict(scoped_search_for_recipe(tinfoil, args.pattern, search, args.scope))
+    else:
+        results = dict(search_for_recipe(tinfoil, args.pattern, search))
+
+    if not results:
+        logger.error("No recipes matching pattern '%s' found", args.pattern)
+        return 1
+
+    for provide, fn in results.iteritems():
+        print("%s: %s" % (provide, fn))
+
+
+# provide bb completions
+def main(arguments):
+    parser = bbcmd.CompleteParser()
+    parser.add_argument('-i', '--ignore-case', action='store_true',
+                        help='perform a case insensistive search')
+    parser.add_argument('-S', '--scope',
+                        help='specify a target scope (rather than all recipes. ex. -S core-image-base)')
+    parser.add_argument('pattern', help='pattern to search for')
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument('-s', '--substring', action='store_true', default=True,
+                      help='perform a substring search (default)')
+    mode.add_argument('-e', '--exact', action='store_true',
+                      help='look for an exact string match')
+    mode.add_argument('-r', '--regex', action='store_true',
+                      help='perform a regex search')
+    mode.add_argument('-w', '--wildcard', action='store_true',
+                      help='perform a glob/wildcard search')
+
+    args = parser.parse_args(arguments)
+    if args is None:
+        # showing completions
+        return
+    else:
+        return search(args)
+
+
+if __name__ == '__main__':
+    bbcmd.run_main(main)
