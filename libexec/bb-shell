@@ -1,6 +1,9 @@
 #!/bin/sh
 # Usage: bb shell
 # Summary: Enter an interactive mode shell (repl)
+# Help: This shell requires repl (https://github.com/defunkt/repl) to function,
+# and rlwrap is recommended to gain basic shell completion and other readline
+# features (http://utopia.knoware.nl/~hlub/uck/rlwrap/).
 
 repl=$(type -p repl 2>/dev/null)
 if [ $? -ne 0 ]; then
