@@ -2,7 +2,6 @@
 # Usage: bb-show [-h] [-d] [-f] [-r RECIPE] [variables [variables ...]]
 # Summary: Show bitbake metadata (global or recipe)
 
-import argparse
 import logging
 import os
 import sys
@@ -211,8 +210,9 @@ def show(args):
             print_variable_flags(data, variable)
 
 
+# provide bb completions
 def main(arguments):
-    parser = argparse.ArgumentParser()
+    parser = bbcmd.CompleteParser()
     parser.add_argument('-d', '--dependencies', action='store_true',
             help='also show functions the vars depend on')
     parser.add_argument('-f', '--flags', action='store_true', help='also show flags')
@@ -220,7 +220,11 @@ def main(arguments):
     parser.add_argument('variables', nargs='*', help='variables to show (default: all variables)')
 
     args = parser.parse_args(arguments)
-    return show(args)
+    if args is None:
+        # showing completions
+        return
+    else:
+        return show(args)
 
 
 if __name__ == '__main__':

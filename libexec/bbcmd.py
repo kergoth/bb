@@ -1,5 +1,6 @@
 """Code common to the various python bb commands"""
 
+import argparse
 import logging
 import os
 import sys
@@ -114,6 +115,23 @@ class Tinfoil(bb.tinfoil.Tinfoil):
             return
         else:
             return self.taskdata.getbuild_id(target)
+
+
+class CompleteParser(argparse.ArgumentParser):
+    """Argument parser which handles '--complete' for completions"""
+    def __init__(self, *args, **kwargs):
+        self.complete_parser = argparse.ArgumentParser(add_help=False)
+        self.complete_parser.add_argument('--complete', action='store_true')
+        super(CompleteParser, self).__init__(*args, **kwargs)
+
+    def parse_args(self, args=None, namespace=None):
+        parsed, remaining = self.complete_parser.parse_known_args(args)
+        if parsed.complete:
+            for action in self._actions:
+                for string in action.option_strings:
+                    print(string)
+        else:
+            return super(CompleteParser, self).parse_args(remaining, namespace)
 
 
 def setup_log_handler(logger, output=sys.stderr):

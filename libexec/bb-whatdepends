@@ -2,7 +2,6 @@
 # Usage: bb-whatdepends [-h] [-r] target [recipes [recipes ...]]
 # Summary: Show what depends on the specified target
 
-import argparse
 import logging
 import os
 import sys
@@ -45,16 +44,20 @@ def whatdepends(args):
             print(tinfoil.taskdata.build_names_index[dep_id])
 
 
+# provide bb completions
 def main(arguments):
-    parser = argparse.ArgumentParser()
+    parser = bbcmd.CompleteParser()
     parser.add_argument('-r', '--recursive', action='store_true',
             help='operate recursively, with indent reflecting depth')
     parser.add_argument('target')
     parser.add_argument('recipes', default=['universe'], nargs='*',
             help='recipes to check for dependencies on target (default: universe)')
-
-    args = parser.parse_args(arguments)
-    return whatdepends(args)
+    args = parser.parse_args()
+    if args is None:
+        # showing completions
+        return
+    else:
+        return whatdepends(args)
 
 
 if __name__ == '__main__':
