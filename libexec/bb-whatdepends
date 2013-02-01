@@ -1,6 +1,7 @@
 #!/usr/bin/env python
-# Usage: bb-whatdepends [-h] [-r] target [recipes [recipes ...]]
+# Usage: bb whatdepends [-h] [-r] target [recipes [recipes ...]]
 # Summary: Show what depends on the specified target
+# Help: See bb whatdepends -h for detailed usage information.
 
 import logging
 import os
