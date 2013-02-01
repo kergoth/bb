@@ -75,10 +75,11 @@ def targets_to_files(tinfoil, targets, with_includes=True):
             cfg_included = tinfoil.localdata.getVar('BBINCLUDED', True).split()
             recipe_included = recipe_data.getVar('BBINCLUDED', True).split()
             final_included = [f for f in (set(recipe_included) - set(cfg_included)) if not f.endswith('.bbclass')]
+            final_included.sort(key=lambda k: k.endswith('.bbappend'))
 
             files.extend(final_included)
-
-        files.extend(appends)
+        else:
+            files.extend(appends)
     return list(iter_uniq(files))
 
 

@@ -28,6 +28,7 @@ Subcommands
 
 - `edit`
 
+  - Sort the appends in layer priority order
   - Add the ability to cross over into the package namespace when/if
     appropriate, in case the user doesn't actually know the recipe that
     provides what they want to edit. Add an argument to specify it explicitly,
