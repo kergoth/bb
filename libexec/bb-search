@@ -30,12 +30,20 @@ def search_for_recipe(tinfoil, pattern, searchfunc):
 
 
 def scoped_search_for_recipe(tinfoil, pattern, searchfunc, scope='world'):
-    tinfoil.prepare_taskdata([scope])
     for targetid in tinfoil.taskdata.build_targets:
         target = tinfoil.taskdata.build_names_index[targetid]
         if searchfunc(pattern, target):
             fnid = tinfoil.taskdata.build_targets[targetid][0]
             yield target, tinfoil.taskdata.fn_index[fnid]
+
+
+def scoped_search_for_package(tinfoil, pattern, searchfunc, scope='world'):
+    for rtargetid in tinfoil.taskdata.run_targets:
+        rtarget = tinfoil.taskdata.run_names_index[rtargetid]
+        if searchfunc(pattern, rtarget):
+            fnid = tinfoil.taskdata.run_targets[rtargetid][0]
+            yield rtarget, tinfoil.taskdata.fn_index[fnid]
+
 
 
 def search(args):
@@ -69,16 +77,18 @@ def search(args):
             search = lambda pattern, string: pattern in string
 
     if args.scope:
-        results = dict(scoped_search_for_recipe(tinfoil, args.pattern, search, args.scope))
+        tinfoil.prepare_taskdata([args.scope])
+
+        print("Recipes:")
+        for provide, fn in scoped_search_for_recipe(tinfoil, args.pattern, search, args.scope):
+            print("%s: %s" % (provide, fn))
+
+        print("Packages:")
+        for rprovide, fn in scoped_search_for_package(tinfoil, args.pattern, search, args.scope):
+            print("%s: %s" % (rprovide, fn))
     else:
-        results = dict(search_for_recipe(tinfoil, args.pattern, search))
-
-    if not results:
-        logger.error("No recipes matching pattern '%s' found", args.pattern)
-        return 1
-
-    for provide, fn in results.iteritems():
-        print("%s: %s" % (provide, fn))
+        for provide, fn in search_for_recipe(tinfoil, args.pattern, search):
+            print("%s: %s" % (provide, fn))
 
 
 # provide bb completions
