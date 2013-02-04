@@ -21,8 +21,7 @@ Subcommands
 
 - `search`
 
-    - Add the ability to search the runtime target namespace rather than build
-      target namespace, via command-line options.
+    - Polish the interface and default behavior
     - Consider adding the ability to automatically cross the namespace
       boundaries automatically when no namespace is specified.
 

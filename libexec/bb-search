@@ -2,9 +2,6 @@
 # Usage: bb search [-h] [-i] [-S SCOPE] [-s | -e | -r | -w] pattern
 # Summary: search for bitbake recipes/targets
 # Help: See bb search -h for detailed usage information.
-#
-# Currently, only the bitbake build target namespace is searched (recipes,
-# PROVIDES).
 
 import fnmatch
 import logging
