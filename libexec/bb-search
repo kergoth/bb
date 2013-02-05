@@ -82,10 +82,11 @@ def search(args):
 
 
     if args.wildcard:
+        flags = 0
         if args.ignore_case:
-            search = lambda pattern, string: fnmatch.fnmatch(string, pattern)
-        else:
-            search = lambda pattern, string: fnmatch.fnmatchcase(string, pattern)
+            flags |= re.IGNORECASE
+        args.pattern = re.compile(fnmatch.translate(args.pattern), flags)
+        search = lambda pattern, string: pattern.search(string)
     elif args.regex:
         flags = 0
         if args.ignore_case:
