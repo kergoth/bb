@@ -77,14 +77,23 @@ def search(args):
 
             filenames = tinfoil.target_filenames()
         else:
-            filenames = []
-            all_filenames = cache_data.pkg_fn.keys()
+            filenames = set()
+            excluded = set()
             for provide, fns in cache_data.providers.iteritems():
                 eligible, foundUnique = bb.providers.filterProviders(fns, provide, tinfoil.localdata,
                                                                      cache_data)
-                filenames.append(eligible[0])
+                preferred = eligible[0]
+                if len(fns) > 1:
+                    # Excluding non-preferred providers in multiple-provider
+                    # situations.
+                    for fn in fns:
+                        if fn != preferred:
+                            excluded.add(fn)
+                filenames.add(preferred)
 
-    for filename in sorted(bbcmd.iter_uniq(filenames)):
+            filenames -= excluded
+
+    for filename in filenames:
         matching_provides = []
         if not args.packages:
             for provide in cache_data.fn_provides[filename]:
