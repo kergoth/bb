@@ -135,7 +135,7 @@ def search(args):
                 if not matched_pn:
                     print(pn + ':')
                 print('  Packages:')
-                for runtime in matching_runtime:
+                for runtime in bbcmd.iter_uniq(matching_runtime):
                     print('    ' + runtime)
 
 
