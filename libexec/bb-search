@@ -30,21 +30,6 @@ def target_filenames(tinfoil):
         fn = tinfoil.taskdata.fn_index[fnid]
         yield fn
 
-def scoped_search_for_recipe(tinfoil, pattern, searchfunc, scope='world'):
-    for targetid in tinfoil.taskdata.build_targets:
-        target = tinfoil.taskdata.build_names_index[targetid]
-        if searchfunc(pattern, target):
-            fnid = tinfoil.taskdata.build_targets[targetid][0]
-            yield target, tinfoil.taskdata.fn_index[fnid]
-
-
-def scoped_search_for_package(tinfoil, pattern, searchfunc, scope='world'):
-    for rtargetid in tinfoil.taskdata.run_targets:
-        rtarget = tinfoil.taskdata.run_names_index[rtargetid]
-        if searchfunc(pattern, rtarget):
-            fnid = tinfoil.taskdata.run_targets[rtargetid][0]
-            yield rtarget, tinfoil.taskdata.fn_index[fnid]
-
 
 def search(args):
     # tinfoil sets up log output for the bitbake loggers, but bb uses
