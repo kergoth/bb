@@ -48,7 +48,7 @@ def search(args):
 
     if args.wildcard:
         args.regex = True
-        args.pattern = fnmatch.translate(args.pattern)
+        args.pattern = r'^' + fnmatch.translate(args.pattern)
     elif args.exact:
         if args.ignore_case:
             search = lambda pattern, string: pattern.upper() == string.upper()
