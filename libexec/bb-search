@@ -79,17 +79,18 @@ def search(args):
         args.pattern = re.compile(args.pattern, flags)
         search = lambda pattern, string: pattern.search(string)
 
-    if args.scope:
-        tinfoil.prepare_taskdata([args.scope])
+    with bbcmd.status('Gathering preferred recipe filenames'):
+        if args.scope:
+            tinfoil.prepare_taskdata([args.scope])
 
-        filenames = target_filenames(tinfoil)
-    else:
-        filenames = []
-        all_filenames = cache_data.pkg_fn.keys()
-        for provide, fns in cache_data.providers.iteritems():
-            eligible, foundUnique = bb.providers.filterProviders(fns, provide, tinfoil.localdata,
-                                                                 cache_data)
-            filenames.append(eligible[0])
+            filenames = target_filenames(tinfoil)
+        else:
+            filenames = []
+            all_filenames = cache_data.pkg_fn.keys()
+            for provide, fns in cache_data.providers.iteritems():
+                eligible, foundUnique = bb.providers.filterProviders(fns, provide, tinfoil.localdata,
+                                                                     cache_data)
+                filenames.append(eligible[0])
 
     for filename in sorted(bbcmd.iter_uniq(filenames)):
         matching_provides = []

@@ -1,6 +1,7 @@
 """Code common to the various python bb commands"""
 
 import argparse
+import contextlib
 import logging
 import os
 import sys
@@ -176,6 +177,25 @@ def iter_uniq(iterable):
         if i not in seen:
             seen.add(i)
             yield i
+
+
+@contextlib.contextmanager
+def status(message, outfile=sys.stderr):
+    """Show the user what we're doing, and whether we succeed"""
+    outfile.write('{}..'.format(message))
+    outfile.flush()
+    try:
+        yield
+    except KeyboardInterrupt:
+        outfile.write('.interrupted\n')
+        raise
+    except Terminate:
+        outfile.write('.terminated\n')
+        raise
+    except BaseException:
+        outfile.write('.failed\n')
+        raise
+    outfile.write('.done\n')
 
 
 def setup_log_handler(logger, output=sys.stderr):
