@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # Usage: bb search [-h] [-i] [-S SCOPE] [-s | -e | -r | -w] pattern
-# Summary: search for bitbake recipes/targets
+# Summary: Search for bitbake recipes or packages
 # Help: See bb search -h for detailed usage information.
 
 import fnmatch

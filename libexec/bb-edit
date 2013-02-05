@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # Usage: bb edit [-h] [-p] [-r] target [target ...]
-# Summary: edit bitbake recipes, included files, and bbappends
+# Summary: Edit bitbake recipes, included files, and bbappends
 # Help: See bb edit -h for detailed usage information.
 
 import logging
