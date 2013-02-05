@@ -38,6 +38,14 @@ Subcommands
       provides what they want to edit. Add an argument to specify it explicitly,
       also, and show a warning message if automatically crossing namespaces.
 
+- `shell`
+
+    - Consider how to avoid reparsing recipes / reloading the recipe cache
+      when running multiple commands from the shell that need to do so.
+    - Consider potentially implementing the shell ourselves rather than
+      letting the 'repl' tool do it. This would let us implement completion
+      for subcommand arguments at the interactive mode prompt.
+
 - `showprovides`
 
   This command will show what a given target provides. This will include `PN`,
