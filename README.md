@@ -27,9 +27,40 @@ Usage
 
     Some useful bb commands are:
        commands     List all bb commands
+       edit         edit bitbake recipes, included files, and bbappends
+       search       search for bitbake recipes/targets
        shell        Enter an interactive mode shell (repl)
        show         Show bitbake metadata (global or recipe)
        whatdepends  Show what depends on the specified target
+
+
+    bb edit [-h] [-p] [-r] targets [targets ...]
+
+    positional arguments:
+      targets             targets to edit
+
+    optional arguments:
+      -h, --help          show this help message and exit
+      -p, --prompt        rather than opening all the files at once, prompt the
+                          user
+      -r, --just-recipes  only edit recipes and appends, not included files
+
+
+    bb search [-h] [-i] [-S SCOPE] [-s | -e | -r | -w] pattern
+
+    positional arguments:
+      pattern               pattern to search for
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      -i, --ignore-case     perform a case insensistive search
+      -S SCOPE, --scope SCOPE
+                            specify a target scope (rather than all recipes. ex.
+                            -S core-image-base)
+      -s, --substring       perform a substring search (default)
+      -e, --exact           look for an exact string match
+      -r, --regex           perform a regex search
+      -w, --wildcard        perform a glob/wildcard search
 
 
     bb show [-h] [-d] [-f] [-r RECIPE] [variables [variables ...]]
@@ -58,6 +89,41 @@ Usage
 
 Examples
 --------
+
+    $ bb edit busybox
+    Parsing recipes..done.
+    NOTE: Editing these files:
+    /scratch/mel7/bb/poky/meta/recipes-core/busybox/busybox_1.20.2.bb
+    /scratch/mel7/bb/poky/meta/recipes-core/busybox/busybox.inc
+    /scratch/mel7/bb/meta-oe/meta-oe/recipes-core/busybox/busybox_1.20.2.bbappend
+    /scratch/mel7/bb/poky/meta-yocto/recipes-core/busybox/busybox_1.20.2.bbappend
+    /scratch/mel7/bb/meta-mentor/recipes/busybox/busybox_1.20.2.bbappend
+
+    # vim spawned here
+    5 files to edit
+
+    $ bb search -S core-image-sato ncurses
+    ncurses:
+      Matches in the build target namespace:
+        ncurses
+        ncurses-5.9
+        ncurses-5.9-r13.1
+      Matches in the runtime namespace:
+        ^ncurses-locale-.*
+    ncurses-native:
+      Matches in the build target namespace:
+        ncurses-native
+        ncurses-native-5.9
+        ncurses-native-5.9-r13.1
+      Matches in the runtime namespace:
+        ncurses-native
+    nativesdk-ncurses:
+      Matches in the build target namespace:
+        nativesdk-ncurses
+        nativesdk-ncurses-5.9
+        nativesdk-ncurses-5.9-r13.1
+      Matches in the runtime namespace:
+        ^nativesdk-ncurses-locale-.*
 
     # Determine what pulls ncurses into a build of core-image-minimal
 
