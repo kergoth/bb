@@ -112,7 +112,7 @@ def search(args):
             if matching_runtime:
                 if not args.packages:
                     print('  Matches in the runtime namespace:')
-                for rtarget in matching_runtime:
+                for rtarget in bbcmd.iter_uniq(matching_runtime):
                     print('    {}'.format(rtarget))
 
 
