@@ -34,13 +34,16 @@ Usage
        whatdepends  Show what depends on the specified target
 
 
-    bb edit [-h] [-p] [-r] targets [targets ...]
+    bb edit [-h] [-e EDITOR] [-p] [-r] targets [targets ...]
 
     positional arguments:
       targets             targets to edit
 
     optional arguments:
       -h, --help          show this help message and exit
+      -e EDITOR, --editor EDITOR
+                          specify the editor to run (default: $VISUAL or $EDITOR
+                          or vi)
       -p, --prompt        rather than opening all the files at once, prompt the
                           user
       -r, --just-recipes  only edit recipes and appends, not included files
