@@ -17,7 +17,7 @@ import bb.codeparser
 logger = logging.getLogger('bb.edit')
 
 
-def prompt(filenames):
+def prompt(filenames, editor='vi'):
     """Show a basic menu to select a file to edit"""
     while True:
         for number, filename in enumerate(filenames):
@@ -43,13 +43,12 @@ def prompt(filenames):
             print("Invalid input '{}'".format(answer))
             continue
 
-        run_editor([filenames[number]])
+        run_editor([filenames[number]], editor)
 
 
-def run_editor(files):
+def run_editor(files, editor='vi'):
     """Run the user's editor of choice editing the specified files"""
     logger.info("Editing these files:\n%s", ''.join(f + '\n' for f in files))
-    editor = os.getenv('VISUAL') or os.getenv('EDITOR') or 'vi'
     os.system(editor + ' ' + ' '.join(pipes.quote(arg) for arg in files))
 
 
@@ -83,6 +82,8 @@ def edit(args):
     # a separate namespace at this time
     bbcmd.setup_log_handler(logging.getLogger('bb'))
 
+    editor = args.editor or os.getenv('VISUAL', os.getenv('EDITOR', 'vi'))
+
     tinfoil = bbcmd.Tinfoil(output=sys.stderr)
     tinfoil.prepare()
     tinfoil.prepare_taskdata(args.targets)
@@ -92,14 +93,16 @@ def edit(args):
         return 1
 
     if args.prompt:
-        prompt(files_to_edit)
+        prompt(files_to_edit, editor)
     else:
-        run_editor(files_to_edit)
+        run_editor(files_to_edit, editor)
 
 
 # provide bb completions
 def main(arguments):
     parser = bbcmd.CompleteParser()
+    parser.add_argument('-e', '--editor',
+                        help='specify the editor to run (default: $VISUAL or $EDITOR or vi)')
     parser.add_argument('-p', '--prompt', action='store_true',
                         help='rather than opening all the files at once, prompt the user')
     parser.add_argument('-r', '--just-recipes', action='store_true',
