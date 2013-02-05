@@ -1,0 +1,98 @@
+#!/usr/bin/env python
+# Usage: bb log [recipe] [task]
+# Summary: Show bitbake logs
+# Help: See bb log -h for detailed usage information.
+
+import logging
+import os
+import sys
+import warnings
+import bbcmd
+import bb
+import bb.cache
+import bb.codeparser
+
+logger = logging.getLogger('bb.log')
+
+def get_data(tinfoil, recipe=None):
+    if recipe:
+        tinfoil.prepare_taskdata([recipe])
+        targetid = tinfoil.get_buildid(recipe)
+        if targetid is None:
+            return
+
+        fnid = tinfoil.taskdata.build_targets[targetid][0]
+        fn = tinfoil.taskdata.fn_index[fnid]
+
+        try:
+            recipe_data = bb.cache.Cache.loadDataFull(fn, tinfoil.cooker.get_file_appends(fn),
+                                                      tinfoil.config_data)
+        except Exception:
+            logger.exception("Unable to read %s", fn)
+            raise
+        return recipe_data
+    else:
+        return tinfoil.localdata
+
+def get_latest(directory, prefix=None):
+    if prefix:
+        files = [os.path.join(directory, f) for f in os.listdir(directory) if f.startswith(prefix)]
+    else:
+        files = [os.path.join(directory, f) for f in os.listdir(directory)]
+    return max(files, key=os.path.getmtime)
+
+def cooker_log():
+    bbcmd.setup_log_handler(logging.getLogger('bb'))
+    tinfoil = bbcmd.Tinfoil(output=sys.stderr)
+    tinfoil.prepare(config_only=True)
+    data = get_data(tinfoil)
+
+    logdir = os.path.join(data.getVar("LOG_DIR", True),
+                          "cooker",
+                          data.getVar("MACHINE", True))
+    os.system("less %s" % get_latest(logdir))
+
+
+def recipe_log(recipe, task):
+    # tinfoil sets up log output for the bitbake loggers, but bb uses
+    # a separate namespace at this time
+    bbcmd.setup_log_handler(logging.getLogger('bb'))
+
+    tinfoil = bbcmd.Tinfoil(output=sys.stderr)
+    tinfoil.prepare(config_only=True)
+    tinfoil.parseRecipes()
+
+    data = get_data(tinfoil, recipe)
+    if not data:
+        return 1
+
+    tempdir = data.getVar("T", True)
+
+    if task is None:
+        os.system("less %s" % get_latest(tempdir, "log.do_"))
+    else:
+        # Latest log for this task, so just follow the symlink for now.
+        # TODO use get_latest?
+        os.system("less %s/log.do_%s" % (tempdir, task))
+
+# provide bb completions
+def main(arguments):
+    parser = bbcmd.CompleteParser()
+    # TODO
+    # no arguments -> latest cooker log
+    # just recipe -> latest recipe log ("the one that just failed")
+    parser.add_argument('recipe', help='recipe name', nargs='?')
+    parser.add_argument('task', help='task name', nargs='?')
+    args = parser.parse_args(arguments)
+
+    if args is None:
+        # showing completions
+        return
+    elif args.recipe is None:
+        return cooker_log()
+    else:
+        return recipe_log(args.recipe, args.task)
+
+
+if __name__ == '__main__':
+    bbcmd.run_main(main)
