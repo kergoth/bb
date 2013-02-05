@@ -20,6 +20,12 @@ To Install
 Run bin/bb init for installation instructions.
 
 
+Future plans
+------------
+
+See [Todo][TODO.md].
+
+
 Usage
 -----
 
