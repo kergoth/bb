@@ -115,6 +115,42 @@ class Tinfoil(bb.tinfoil.Tinfoil):
         else:
             return self.taskdata.getbuild_id(target)
 
+    def provide_to_fn(self, provide):
+        """Return the preferred recipe for the specified provide"""
+        filenames = self.cooker.status.providers[provide]
+        eligible, foundUnique = bb.providers.filterProviders(filenames, provide, self.localdata)
+        return eligible[0]
+
+    def build_target_to_fn(self, target):
+        """Given a target, prepare taskdata and return a filename"""
+        self.prepare_taskdata([target])
+        targetid = self.get_buildid(target)
+        if targetid is None:
+            return
+        fnid = self.taskdata.build_targets[targetid][0]
+        fn = self.taskdata.fn_index[fnid]
+        return fn
+
+    def parse_recipe_file(self, recipe_filename):
+        """Given a recipe filename, do a full parse of it"""
+        appends = self.cooker.get_file_appends(recipe_filename)
+        try:
+            recipe_data = bb.cache.Cache.loadDataFull(recipe_filename,
+                                                      appends,
+                                                      self.config_data)
+        except Exception:
+            raise
+        return recipe_data
+
+    def parse_metadata(self, recipe=None):
+        """Return metadata, either global or for a particular recipe"""
+        if recipe:
+            self.prepare_taskdata([recipe])
+            filename = self.build_target_to_fn(recipe)
+            return self.parse_recipe_file(filename)
+        else:
+            return self.localdata
+
 
 class CompleteParser(argparse.ArgumentParser):
     """Argument parser which handles '--complete' for completions"""

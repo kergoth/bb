@@ -19,14 +19,6 @@ from collections import defaultdict
 logger = logging.getLogger('bb.search')
 
 
-def search_for_recipe(tinfoil, pattern, searchfunc):
-    for provide, fns in tinfoil.cooker.status.providers.iteritems():
-        if searchfunc(pattern, provide):
-            eligible, foundUnique = bb.providers.filterProviders(fns, provide, tinfoil.localdata,
-                                                                 tinfoil.cooker.status)
-            yield provide, eligible[0]
-
-
 def target_filenames(tinfoil):
     for targetid in tinfoil.taskdata.build_targets:
         fnid = tinfoil.taskdata.build_targets[targetid][0]

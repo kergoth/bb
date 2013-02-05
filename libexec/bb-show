@@ -16,27 +16,6 @@ import bb.codeparser
 logger = logging.getLogger('bb.show')
 
 
-def get_data(tinfoil, recipe=None):
-    if recipe:
-        tinfoil.prepare_taskdata([recipe])
-        targetid = tinfoil.get_buildid(recipe)
-        if targetid is None:
-            return
-
-        fnid = tinfoil.taskdata.build_targets[targetid][0]
-        fn = tinfoil.taskdata.fn_index[fnid]
-
-        try:
-            recipe_data = bb.cache.Cache.loadDataFull(fn, tinfoil.cooker.get_file_appends(fn),
-                                                      tinfoil.config_data)
-        except Exception:
-            logger.exception("Unable to read %s", fn)
-            raise
-        return recipe_data
-    else:
-        return tinfoil.localdata
-
-
 # TODO: enhance bb.data.emit* to function more flexibly, like these
 def escape_shell_value(value):
     value = value.replace('"', r'\"')
@@ -188,7 +167,7 @@ def show(args):
     if args.recipe:
         tinfoil.parseRecipes()
 
-    data = get_data(tinfoil, args.recipe)
+    data = tinfoil.parse_metadata(args.recipe)
     if not data:
         return 1
 
