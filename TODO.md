@@ -21,9 +21,14 @@ Subcommands
 
 - `search`
 
-    - Polish the interface and default behavior
-    - Consider adding the ability to automatically cross the namespace
-      boundaries automatically when no namespace is specified.
+    - Look into ways of reducing the output, e.g. hiding certain bits of
+      information by default when that information is largely redundant.
+
+- `list`
+
+  This command will simply act as an unfiltered search, to list what recipes
+  and packages are available. Default to showing both, add arguments to
+  specify which to hide/show.
 
 - `edit`
 
