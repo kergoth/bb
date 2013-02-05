@@ -23,7 +23,7 @@ Run bin/bb init for installation instructions.
 Future plans
 ------------
 
-See [Todo][TODO.md].
+See the [Todo](TODO.md) list.
 
 
 Usage
