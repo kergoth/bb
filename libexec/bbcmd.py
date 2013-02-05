@@ -133,6 +133,15 @@ class CompleteParser(argparse.ArgumentParser):
             return super(CompleteParser, self).parse_args(remaining, namespace)
 
 
+def iter_uniq(iterable):
+    """Yield unique elements of an iterable"""
+    seen = set()
+    for i in iterable:
+        if i not in seen:
+            seen.add(i)
+            yield i
+
+
 def setup_log_handler(logger, output=sys.stderr):
     log_format = bb.msg.BBLogFormatter("%(levelname)s: %(message)s")
     if output.isatty():

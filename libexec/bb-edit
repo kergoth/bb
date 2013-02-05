@@ -87,16 +87,7 @@ def targets_to_files(tinfoil, targets, with_includes=True):
             files.extend(final_included)
         else:
             files.extend(appends)
-    return list(iter_uniq(bb.cache.Cache.virtualfn2realfn(f)[0] for f in files))
-
-
-def iter_uniq(iterable):
-    """Yield unique elements of an iterable"""
-    seen = set()
-    for i in iterable:
-        if i not in seen:
-            seen.add(i)
-            yield i
+    return list(bbcmd.iter_uniq(bb.cache.Cache.virtualfn2realfn(f)[0] for f in files))
 
 
 def edit(args):

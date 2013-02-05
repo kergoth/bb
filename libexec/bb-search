@@ -13,6 +13,7 @@ import bbcmd
 import bb
 import bb.cache
 import bb.codeparser
+from collections import defaultdict
 
 
 logger = logging.getLogger('bb.search')
@@ -25,6 +26,17 @@ def search_for_recipe(tinfoil, pattern, searchfunc):
                                                                  tinfoil.cooker.status)
             yield provide, eligible[0]
 
+
+def target_filenames(tinfoil):
+    for targetid in tinfoil.taskdata.build_targets:
+        fnid = tinfoil.taskdata.build_targets[targetid][0]
+        fn = tinfoil.taskdata.fn_index[fnid]
+        yield fn
+
+    for targetid in tinfoil.taskdata.run_targets:
+        fnid = tinfoil.taskdata.run_targets[targetid][0]
+        fn = tinfoil.taskdata.fn_index[fnid]
+        yield fn
 
 def scoped_search_for_recipe(tinfoil, pattern, searchfunc, scope='world'):
     for targetid in tinfoil.taskdata.build_targets:
@@ -42,7 +54,6 @@ def scoped_search_for_package(tinfoil, pattern, searchfunc, scope='world'):
             yield rtarget, tinfoil.taskdata.fn_index[fnid]
 
 
-
 def search(args):
     # tinfoil sets up log output for the bitbake loggers, but bb uses
     # a separate namespace at this time
@@ -50,6 +61,25 @@ def search(args):
 
     tinfoil = bbcmd.Tinfoil(output=sys.stderr)
     tinfoil.prepare()
+
+    cache_data = tinfoil.cooker.status
+
+    # Build the maps from fn to the runtime provide information
+    fn_rprovides = defaultdict(set)
+    for rprovide, fns in cache_data.rproviders.iteritems():
+        for fn in fns:
+            fn_rprovides[fn].add(rprovide)
+
+    fn_packages = defaultdict(list)
+    for package, fns in cache_data.packages.iteritems():
+        for fn in fns:
+            fn_packages[fn].append(package)
+
+    fn_packages_dynamic = defaultdict(list)
+    for dynamic, fns in cache_data.packages_dynamic.iteritems():
+        for fn in fns:
+            fn_packages_dynamic[fn].append(dynamic)
+
 
     if args.wildcard:
         if args.ignore_case:
@@ -76,16 +106,45 @@ def search(args):
     if args.scope:
         tinfoil.prepare_taskdata([args.scope])
 
-        print("Recipes:")
-        for provide, fn in scoped_search_for_recipe(tinfoil, args.pattern, search, args.scope):
-            print("%s: %s" % (provide, fn))
-
-        print("Packages:")
-        for rprovide, fn in scoped_search_for_package(tinfoil, args.pattern, search, args.scope):
-            print("%s: %s" % (rprovide, fn))
+        filenames = target_filenames(tinfoil)
     else:
-        for provide, fn in search_for_recipe(tinfoil, args.pattern, search):
-            print("%s: %s" % (provide, fn))
+        filenames = []
+        all_filenames = cache_data.pkg_fn.keys()
+        for provide, fns in cache_data.providers.iteritems():
+            eligible, foundUnique = bb.providers.filterProviders(fns, provide, tinfoil.localdata,
+                                                                 cache_data)
+            filenames.append(eligible[0])
+
+    for filename in sorted(bbcmd.iter_uniq(filenames)):
+        matching_provides = []
+        for provide in cache_data.fn_provides[filename]:
+            if search(args.pattern, provide):
+                matching_provides.append(provide)
+
+        matching_runtime = []
+        for package in fn_packages[filename]:
+            if search(args.pattern, package):
+                matching_runtime.append(package)
+
+        for rprovide in fn_rprovides[filename]:
+            if search(args.pattern, rprovide):
+                matching_runtime.append(rprovide)
+
+        for dynamic in fn_packages_dynamic[filename]:
+            if search(args.pattern, dynamic):
+                matching_runtime.append(dynamic)
+
+        if matching_provides or matching_runtime:
+            pn = cache_data.pkg_fn[filename]
+            print('{}:'.format(pn))
+            if matching_provides:
+                print('  Matches in the build target namespace:')
+                for provide in matching_provides:
+                    print('    {}'.format(provide))
+            if matching_runtime:
+                print('  Matches in the runtime namespace:')
+                for rtarget in matching_runtime:
+                    print('    {}'.format(rtarget))
 
 
 # provide bb completions
