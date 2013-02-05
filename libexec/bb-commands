@@ -26,6 +26,10 @@ shopt -s nullglob
 { for path in ${PATH//:/$'\n'}; do
     for command in "${path}/bb-"*; do
       command="${command##*bb-}"
+      if [ ${command: -1} = "~" ]; then
+        # editor backup
+        continue
+      fi
       if [ -n "$sh" ]; then
         if [ ${command:0:3} = "sh-" ]; then
           echo ${command##sh-}
