@@ -19,11 +19,6 @@ Subcommands
       and the information about how and where variables were defined. This is
       necessary for feature parity with `bitbake -e`.
 
-- `search`
-
-    - Look into ways of reducing the output, e.g. hiding certain bits of
-      information by default when that information is largely redundant.
-
 - `list`
 
   This command will simply act as an unfiltered search, to list what recipes

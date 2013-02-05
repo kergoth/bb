@@ -94,39 +94,49 @@ def search(args):
             filenames -= excluded
 
     for filename in filenames:
-        matching_provides = []
+        pn = cache_data.pkg_fn[filename]
+        matched_pn = False
         if not args.packages:
+            matched_pn = search(args.pattern, cache_data.pkg_fn[filename])
+            if matched_pn:
+                print(pn)
+                if not args.all:
+                    continue
+
+            matching_provides = []
             for provide in cache_data.fn_provides[filename]:
                 if search(args.pattern, provide):
                     matching_provides.append(provide)
+            if matching_provides:
+                if not matched_pn:
+                    print(pn + ':')
+                if matching_provides:
+                    print('  Provides:')
+                    for provide in matching_provides:
+                        print('    ' + provide)
+                    if not args.all:
+                        continue
 
-        matching_runtime = []
         if not args.recipes:
+            matching_runtime = []
             for package in fn_packages[filename]:
                 if search(args.pattern, package):
                     matching_runtime.append(package)
+            if not matching_runtime or args.all:
+                for rprovide in fn_rprovides[filename]:
+                    if search(args.pattern, rprovide):
+                        matching_runtime.append(rprovide)
+                if not matching_runtime or args.all:
+                    for dynamic in fn_packages_dynamic[filename]:
+                        if search(args.pattern, dynamic):
+                            matching_runtime.append(dynamic)
 
-            for rprovide in fn_rprovides[filename]:
-                if search(args.pattern, rprovide):
-                    matching_runtime.append(rprovide)
-
-            for dynamic in fn_packages_dynamic[filename]:
-                if search(args.pattern, dynamic):
-                    matching_runtime.append(dynamic)
-
-        if matching_provides or matching_runtime:
-            pn = cache_data.pkg_fn[filename]
-            print('{}:'.format(pn))
-            if matching_provides:
-                if not args.recipes:
-                    print('  Matches in the build target namespace:')
-                for provide in matching_provides:
-                    print('    {}'.format(provide))
             if matching_runtime:
-                if not args.packages:
-                    print('  Matches in the runtime namespace:')
-                for rtarget in bbcmd.iter_uniq(matching_runtime):
-                    print('    {}'.format(rtarget))
+                if not matched_pn:
+                    print(pn + ':')
+                print('  Packages:')
+                for runtime in matching_runtime:
+                    print('    ' + runtime)
 
 
 # provide bb completions
@@ -138,7 +148,8 @@ def main(arguments):
                         help='search for a particular word (only supported by the regex and wildcard searches)')
     parser.add_argument('-S', '--scope',
                         help='specify a target scope (rather than all recipes. ex. -S core-image-base)')
-    parser.add_argument('pattern', help='pattern to search for')
+    parser.add_argument('-a', '--all', action='store_true',
+                        help='display all matches, even if we have already matched a given recipe')
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument('-s', '--substring', action='store_true', default=True,
                       help='perform a substring search (default)')
@@ -153,6 +164,8 @@ def main(arguments):
                            help='search the recipe namespace only')
     namespace.add_argument('-P', '--packages', action='store_true',
                            help='search the package namespace only')
+
+    parser.add_argument('pattern', help='pattern to search for')
 
     args = parser.parse_args(arguments)
     if args is None:
