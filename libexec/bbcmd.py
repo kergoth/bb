@@ -116,6 +116,22 @@ class Tinfoil(bb.tinfoil.Tinfoil):
         else:
             return self.taskdata.getbuild_id(target)
 
+    def target_filenames(self):
+        """Return the filenames of all of taskdata's targets"""
+        filenames = set()
+
+        for targetid in self.taskdata.build_targets:
+            fnid = self.taskdata.build_targets[targetid][0]
+            fn = self.taskdata.fn_index[fnid]
+            filenames.add(fn)
+
+        for targetid in self.taskdata.run_targets:
+            fnid = self.taskdata.run_targets[targetid][0]
+            fn = self.taskdata.fn_index[fnid]
+            filenames.add(fn)
+
+        return filenames
+
     def provide_to_fn(self, provide):
         """Return the preferred recipe for the specified provide"""
         filenames = self.cooker.status.providers[provide]

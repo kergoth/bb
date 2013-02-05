@@ -19,18 +19,6 @@ from collections import defaultdict
 logger = logging.getLogger('bb.search')
 
 
-def target_filenames(tinfoil):
-    for targetid in tinfoil.taskdata.build_targets:
-        fnid = tinfoil.taskdata.build_targets[targetid][0]
-        fn = tinfoil.taskdata.fn_index[fnid]
-        yield fn
-
-    for targetid in tinfoil.taskdata.run_targets:
-        fnid = tinfoil.taskdata.run_targets[targetid][0]
-        fn = tinfoil.taskdata.fn_index[fnid]
-        yield fn
-
-
 def search(args):
     # tinfoil sets up log output for the bitbake loggers, but bb uses
     # a separate namespace at this time
@@ -83,7 +71,7 @@ def search(args):
         if args.scope:
             tinfoil.prepare_taskdata([args.scope])
 
-            filenames = target_filenames(tinfoil)
+            filenames = tinfoil.target_filenames()
         else:
             filenames = []
             all_filenames = cache_data.pkg_fn.keys()
