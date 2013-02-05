@@ -93,32 +93,36 @@ def search(args):
 
     for filename in sorted(bbcmd.iter_uniq(filenames)):
         matching_provides = []
-        for provide in cache_data.fn_provides[filename]:
-            if search(args.pattern, provide):
-                matching_provides.append(provide)
+        if not args.packages:
+            for provide in cache_data.fn_provides[filename]:
+                if search(args.pattern, provide):
+                    matching_provides.append(provide)
 
         matching_runtime = []
-        for package in fn_packages[filename]:
-            if search(args.pattern, package):
-                matching_runtime.append(package)
+        if not args.recipes:
+            for package in fn_packages[filename]:
+                if search(args.pattern, package):
+                    matching_runtime.append(package)
 
-        for rprovide in fn_rprovides[filename]:
-            if search(args.pattern, rprovide):
-                matching_runtime.append(rprovide)
+            for rprovide in fn_rprovides[filename]:
+                if search(args.pattern, rprovide):
+                    matching_runtime.append(rprovide)
 
-        for dynamic in fn_packages_dynamic[filename]:
-            if search(args.pattern, dynamic):
-                matching_runtime.append(dynamic)
+            for dynamic in fn_packages_dynamic[filename]:
+                if search(args.pattern, dynamic):
+                    matching_runtime.append(dynamic)
 
         if matching_provides or matching_runtime:
             pn = cache_data.pkg_fn[filename]
             print('{}:'.format(pn))
             if matching_provides:
-                print('  Matches in the build target namespace:')
+                if not args.recipes:
+                    print('  Matches in the build target namespace:')
                 for provide in matching_provides:
                     print('    {}'.format(provide))
             if matching_runtime:
-                print('  Matches in the runtime namespace:')
+                if not args.packages:
+                    print('  Matches in the runtime namespace:')
                 for rtarget in matching_runtime:
                     print('    {}'.format(rtarget))
 
@@ -140,6 +144,11 @@ def main(arguments):
                       help='perform a regex search')
     mode.add_argument('-w', '--wildcard', action='store_true',
                       help='perform a glob/wildcard search')
+    namespace = parser.add_mutually_exclusive_group()
+    namespace.add_argument('-R', '--recipes', action='store_true',
+                           help='search the recipe namespace only')
+    namespace.add_argument('-P', '--packages', action='store_true',
+                           help='search the package namespace only')
 
     args = parser.parse_args(arguments)
     if args is None:
