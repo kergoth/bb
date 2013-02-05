@@ -24,6 +24,32 @@ def search(args):
     # a separate namespace at this time
     bbcmd.setup_log_handler(logging.getLogger('bb'))
 
+    if args.wildcard:
+        args.regex = True
+        args.pattern = r'^' + fnmatch.translate(args.pattern)
+    elif args.exact:
+        if args.ignore_case:
+            search = lambda pattern, string: pattern.upper() == string.upper()
+        else:
+            search = lambda pattern, string: pattern == string
+    elif args.substring:
+        if args.ignore_case:
+            search = lambda pattern, string: pattern.upper() in string.upper()
+        else:
+            search = lambda pattern, string: pattern in string
+
+    if args.regex:
+        flags = 0
+        if args.ignore_case:
+            flags |= re.IGNORECASE
+        if args.word:
+            args.pattern = r'\b{}\b'.format(args.pattern)
+        args.pattern = re.compile(args.pattern, flags)
+        search = lambda pattern, string: pattern.search(string)
+    elif args.word:
+        logger.error('--word is only supported with regex and wildcard searches')
+        return 2
+
     tinfoil = bbcmd.Tinfoil(output=sys.stderr)
     tinfoil.prepare()
 
@@ -44,28 +70,6 @@ def search(args):
     for dynamic, fns in cache_data.packages_dynamic.iteritems():
         for fn in fns:
             fn_packages_dynamic[fn].append(dynamic)
-
-
-    if args.wildcard:
-        args.regex = True
-        args.pattern = r'^' + fnmatch.translate(args.pattern)
-    elif args.exact:
-        if args.ignore_case:
-            search = lambda pattern, string: pattern.upper() == string.upper()
-        else:
-            search = lambda pattern, string: pattern == string
-    elif args.substring:
-        if args.ignore_case:
-            search = lambda pattern, string: pattern.upper() in string.upper()
-        else:
-            search = lambda pattern, string: pattern in string
-
-    if args.regex:
-        flags = 0
-        if args.ignore_case:
-            flags |= re.IGNORECASE
-        args.pattern = re.compile(args.pattern, flags)
-        search = lambda pattern, string: pattern.search(string)
 
     with bbcmd.status('Gathering preferred recipe filenames'):
         if args.scope:
@@ -121,6 +125,8 @@ def main(arguments):
     parser = bbcmd.CompleteParser()
     parser.add_argument('-i', '--ignore-case', action='store_true',
                         help='perform a case insensistive search')
+    parser.add_argument('-W', '--word', action='store_true',
+                        help='search for a particular word (only supported by the regex and wildcard searches)')
     parser.add_argument('-S', '--scope',
                         help='specify a target scope (rather than all recipes. ex. -S core-image-base)')
     parser.add_argument('pattern', help='pattern to search for')
