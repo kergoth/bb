@@ -3,21 +3,9 @@
 # Summary: List available recipes / provides
 # Help: See bb list -h for detailed usage information.
 
-def setup_command_import(command, relpath='../lib'):
-    """Set up the import path based on the location of a binary in the PATH """
-    PATH = os.getenv('PATH').split(':')
-    cmd_paths = [os.path.join(path, relpath)
-                for path in PATH if os.path.exists(os.path.join(path, command))]
-    if not cmd_paths:
-        raise ImportError("Unable to locate bb, please ensure PATH is set correctly.")
-
-    sys.path[0:0] = cmd_paths
-
 import logging
 import os
 import sys
-# This call is only needed if this bb subcommand doesn't live in bb/libexec/
-setup_command_import('bb', '../libexec')
 import bbcmd
 
 
