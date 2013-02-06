@@ -1,0 +1,64 @@
+#!/usr/bin/env python
+# Usage: bb example
+# Summary: A template for a new subcommand that uses bbcmd
+# Help: See bb example -h for detailed usage information.
+
+def setup_command_import(command, relpath='../lib'):
+    """Set up the import path based on the location of a binary in the PATH """
+    PATH = os.getenv('PATH').split(':')
+    cmd_paths = [os.path.join(path, relpath)
+                for path in PATH if os.path.exists(os.path.join(path, command))]
+    if not cmd_paths:
+        raise ImportError("Unable to locate bb, please ensure PATH is set correctly.")
+
+    sys.path[0:0] = cmd_paths
+
+import logging
+import os
+import sys
+# This call is only needed if this bb subcommand doesn't live in bb/libexec/
+setup_command_import('bb', '../libexec')
+import bbcmd
+
+
+logger = logging.getLogger('bb.example')
+
+
+def example(args):
+    # tinfoil sets up log output for the bitbake loggers, but bb uses
+    # a separate namespace at this time
+    bbcmd.setup_log_handler(logging.getLogger('bb'))
+
+    tinfoil = bbcmd.Tinfoil(output=sys.stderr)
+    # tinfoil.prepare(config_only=True) - if we don't need recipes parsed
+    tinfoil.prepare()
+
+    cache_data = tinfoil.cooker.status
+
+    if args.tmpdir:
+        print(tinfoil.localdata.getVar('TMPDIR', True))
+    elif args.topdir:
+        print(tinfoil.localdata.getVar('TOPDIR', True))
+
+
+# provide bb completions
+def main(arguments):
+    parser = bbcmd.CompleteParser()
+    variable = parser.add_mutually_exclusive_group()
+    variable.add_argument('--tmpdir', action='store_true',
+                          help='print the bitbake temporary directory')
+    variable.add_argument('--topdir', action='store_true',
+                          help='print the bitbake top directory')
+
+    parser.add_argument('some_positional_arg', nargs='?', help='some value')
+
+    args = parser.parse_args(arguments)
+    if args is None:
+        # showing completions
+        return
+    else:
+        return example(args)
+
+
+if __name__ == '__main__':
+    bbcmd.run_main(main)
