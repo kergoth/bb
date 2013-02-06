@@ -32,12 +32,26 @@ Usage
     bb <command> [<args>]
 
     Some useful bb commands are:
-       commands     List all bb commands
-       edit         edit bitbake recipes, included files, and bbappends
-       search       search for bitbake recipes/targets
-       shell        Enter an interactive mode shell (repl)
-       show         Show bitbake metadata (global or recipe)
-       whatdepends  Show what depends on the specified target
+       commands         List all bb commands
+       contents         Show package contents
+       edit             Edit bitbake recipes, included files, and bbappends
+       list             List available recipes / provides
+       log              Show bitbake logs
+       search           Search for bitbake recipes or packages
+       search-packages  Search for bitbake packages
+       search-recipes   Search for bitbake recipes
+       shell            Enter an interactive mode shell (repl)
+       show             Show bitbake metadata (global or recipe)
+       whatdepends      Show what depends on the specified target
+
+
+    bb contents [-h] recipe
+
+    positional arguments:
+      recipe      recipe name
+
+    optional arguments:
+      -h, --help  show this help message and exit
 
 
     bb edit [-h] [-e EDITOR] [-p] [-r] targets [targets ...]
@@ -53,6 +67,25 @@ Usage
       -p, --prompt        rather than opening all the files at once, prompt the
                           user
       -r, --just-recipes  only edit recipes and appends, not included files
+
+
+    bb list [-h] [-S SCOPE]
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      -S SCOPE, --scope SCOPE
+                            specify a target scope (rather than all recipes. ex.
+                            -S core-image-base)
+
+
+    bb log [-h] [recipe] [task]
+
+    positional arguments:
+      recipe      recipe name
+      task        task name
+
+    optional arguments:
+      -h, --help  show this help message and exit
 
 
     bb search [-h] [-i] [-S SCOPE] [-s | -e | -r | -w] pattern
@@ -99,6 +132,33 @@ Usage
 Examples
 --------
 
+    $ bb contents bash
+    bash
+    /bin/bash
+    /usr/bin/bashbug
+
+    bash-dbg
+    /bin/.debug/bash
+    /usr/src/debug/bash/4.2-r6/bash-4.2/alias.c
+    /usr/src/debug/bash/4.2-r6/bash-4.2/alias.h
+    /usr/src/debug/bash/4.2-r6/bash-4.2/array.c
+    /usr/src/debug/bash/4.2-r6/bash-4.2/array.h
+    [.. output snipped ..]
+    /usr/src/debug/bash/4.2-r6/bash-4.2/support/signames.c
+
+    bash-dev
+
+    bash-doc
+    /usr/share/doc/bash.html
+    /usr/share/doc/bashref.html
+    /usr/share/info/bash.info
+    /usr/share/man/man1/bash.1
+    /usr/share/man/man1/bashbug.1
+
+    bash-locale
+
+    bash-staticdev
+
     $ bb edit busybox
     Parsing recipes..done.
     NOTE: Editing these files:
@@ -111,29 +171,57 @@ Examples
     # vim spawned here
     5 files to edit
 
-    $ bb search -S core-image-sato ncurses
-    ncurses:
-      Matches in the build target namespace:
-        ncurses
-        ncurses-5.9
-        ncurses-5.9-r13.1
-      Matches in the runtime namespace:
-        ^ncurses-locale-.*
-    ncurses-native:
-      Matches in the build target namespace:
-        ncurses-native
-        ncurses-native-5.9
-        ncurses-native-5.9-r13.1
-      Matches in the runtime namespace:
-        ncurses-native
-    nativesdk-ncurses:
-      Matches in the build target namespace:
-        nativesdk-ncurses
-        nativesdk-ncurses-5.9
-        nativesdk-ncurses-5.9-r13.1
-      Matches in the runtime namespace:
-        ^nativesdk-ncurses-locale-.*
+    $ bb list -S pseudo-native
+    util-linux-native
+    libtool-native
+    gettext-minimal-native
+    lzo-native
+    m4-native
+    sqlite3-native
+    zlib-native
+    ncurses-native
+    automake-native
+    pseudo-native
+      virtual/fakeroot-native
+    quilt-native
+    autoconf-native
+    gnu-config-native
+    pkgconfig-native
 
+    $ bb search bash
+    bash
+    glib-2.0:
+      Packages:
+        glib-2.0-bash-completion
+    nativesdk-glib-2.0:
+      Packages:
+        nativesdk-glib-2.0-bash-completion
+    nativesdk-bash
+    dbus-glib:
+      Packages:
+        dbus-glib-bash-completion
+
+    $ bb show DISTRO MACHINE TUNE_ARCH TUNE_FEATURES
+    # DISTRO="mel"
+    # MACHINE="p4080ds"
+    # TUNE_ARCH="${@bb.utils.contains("TUNE_FEATURES", "m32", "powerpc", "", d)}"
+    TUNE_ARCH="powerpc"
+    # TUNE_FEATURES="${TUNE_FEATURES_tune-${DEFAULTTUNE}}"
+    TUNE_FEATURES="m32 fpu-hard ppce500mc"
+
+    $ bb show -d -f COPYLEFT_RECIPE_TYPE
+    # COPYLEFT_RECIPE_TYPE="${@copyleft_recipe_type(d)}"
+    COPYLEFT_RECIPE_TYPE="target"
+    COPYLEFT_RECIPE_TYPE[doc]="The "type" of the current recipe (e.g. target, native, cross)"
+    def copyleft_recipe_type(d):
+        for recipe_type in oe.data.typed_value('COPYLEFT_AVAILABLE_RECIPE_TYPES', d):
+            if oe.utils.inherits(d, recipe_type):
+                return recipe_type
+        return 'target'
+
+    $ bb show -r virtual/kernel PROVIDES
+    Parsing recipes..done.
+    PROVIDES="linux-qoriq-sdk-3.0.34 linux-qoriq-sdk-3.0.34-r9b linux-qoriq-sdk  virtual/kernel"
     # Determine what pulls ncurses into a build of core-image-minimal
 
     $ bb whatdepends ncurses core-image-minimal
@@ -157,25 +245,3 @@ Examples
       libgcrypt
         gtk+
           libglade
-
-    $ bb show DISTRO MACHINE TUNE_ARCH TUNE_FEATURES
-    # DISTRO="mel"
-    # MACHINE="p4080ds"
-    # TUNE_ARCH="${@bb.utils.contains("TUNE_FEATURES", "m32", "powerpc", "", d)}"
-    TUNE_ARCH="powerpc"
-    # TUNE_FEATURES="${TUNE_FEATURES_tune-${DEFAULTTUNE}}"
-    TUNE_FEATURES="m32 fpu-hard ppce500mc"
-
-    $ bb show -d -f COPYLEFT_RECIPE_TYPE
-    # COPYLEFT_RECIPE_TYPE="${@copyleft_recipe_type(d)}"
-    COPYLEFT_RECIPE_TYPE="target"
-    COPYLEFT_RECIPE_TYPE[doc]="The "type" of the current recipe (e.g. target, native, cross)"
-    def copyleft_recipe_type(d):
-        for recipe_type in oe.data.typed_value('COPYLEFT_AVAILABLE_RECIPE_TYPES', d):
-            if oe.utils.inherits(d, recipe_type):
-                return recipe_type
-        return 'target'
-
-    $ bb show -r virtual/kernel PROVIDES
-    Parsing recipes..done.
-    PROVIDES="linux-qoriq-sdk-3.0.34 linux-qoriq-sdk-3.0.34-r9b linux-qoriq-sdk  virtual/kernel"
