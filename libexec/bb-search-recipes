@@ -1,0 +1,8 @@
+#!/bin/sh
+# Usage: bb search-recipes [-h] [-i] [-W] [-S SCOPE] [-a] [-s | -e | -r | -w] pattern
+# Summary: Search for bitbake recipes
+# Help: See bb search-recipes -h for detailed usage information.
+
+# provide bb completions
+
+exec bb search -R "$@"

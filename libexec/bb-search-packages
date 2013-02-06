@@ -1,0 +1,8 @@
+#!/bin/sh
+# Usage: bb search-packages [-h] [-i] [-W] [-S SCOPE] [-a] [-s | -e | -r | -w] pattern
+# Summary: Search for bitbake packages
+# Help: See bb search-packages -h for detailed usage information.
+
+# provide bb completions
+
+exec bb search -P "$@"
