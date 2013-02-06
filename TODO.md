@@ -21,9 +21,7 @@ Subcommands
 
 - `list`
 
-  This command will simply act as an unfiltered search, to list what recipes
-  and packages are available. Default to showing both, add arguments to
-  specify which to hide/show.
+    - Add the ability to list runtime targets one can add to an image
 
 - `edit`
 

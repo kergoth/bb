@@ -132,6 +132,32 @@ class Tinfoil(bb.tinfoil.Tinfoil):
 
         return filenames
 
+    def all_filenames(self):
+        return self.cooker.status.file_checksums.keys()
+
+    def all_preferred_filenames(self):
+        """Return all the recipes we have cached, filtered by providers.
+
+        Unlike target_filenames, this doesn't operate against taskdata.
+        """
+        filenames = set()
+        excluded = set()
+        for provide, fns in self.cooker.status.providers.iteritems():
+            eligible, foundUnique = bb.providers.filterProviders(fns, provide,
+                                                                 self.localdata,
+                                                                 self.cooker.status)
+            preferred = eligible[0]
+            if len(fns) > 1:
+                # Excluding non-preferred providers in multiple-provider
+                # situations.
+                for fn in fns:
+                    if fn != preferred:
+                        excluded.add(fn)
+            filenames.add(preferred)
+
+        filenames -= excluded
+        return filenames
+
     def provide_to_fn(self, provide):
         """Return the preferred recipe for the specified provide"""
         filenames = self.cooker.status.providers[provide]

@@ -1,0 +1,84 @@
+#!/usr/bin/env python
+# Usage: bb list
+# Summary: List available recipes / provides
+# Help: See bb list -h for detailed usage information.
+
+def setup_command_import(command, relpath='../lib'):
+    """Set up the import path based on the location of a binary in the PATH """
+    PATH = os.getenv('PATH').split(':')
+    cmd_paths = [os.path.join(path, relpath)
+                for path in PATH if os.path.exists(os.path.join(path, command))]
+    if not cmd_paths:
+        raise ImportError("Unable to locate bb, please ensure PATH is set correctly.")
+
+    sys.path[0:0] = cmd_paths
+
+import logging
+import os
+import sys
+# This call is only needed if this bb subcommand doesn't live in bb/libexec/
+setup_command_import('bb', '../libexec')
+import bbcmd
+
+
+logger = logging.getLogger('bb.list')
+
+
+def list(args):
+    # tinfoil sets up log output for the bitbake loggers, but bb uses
+    # a separate namespace at this time
+    bbcmd.setup_log_handler(logging.getLogger('bb'))
+
+    tinfoil = bbcmd.Tinfoil(output=sys.stderr)
+    tinfoil.prepare()
+
+    with bbcmd.status('Gathering preferred recipe filenames'):
+        if args.scope:
+            tinfoil.prepare_taskdata([args.scope])
+            filenames = tinfoil.target_filenames()
+        else:
+            filenames = tinfoil.all_preferred_filenames()
+
+    cache_data = tinfoil.cooker.status
+
+    global_data = tinfoil.config_data.createCopy()
+    bb.data.expandKeys(global_data)
+    bb.data.update_data(global_data)
+    global_data.setVar('PN', '{pn}')
+    global_data.setVar('PF', '{pf}')
+    global_data.setVar('P', '{p}')
+    global_provides = global_data.getVar('PROVIDES', True)
+
+    for fn in filenames:
+        pn = cache_data.pkg_fn[fn]
+        pe, pv, pr = cache_data.pkg_pepvpr[fn]
+        if pe:
+            pe_pv = pe + '_' + pv
+        else:
+            pe_pv = pv
+
+        pn_default_provides = global_provides.format(pn=pn,
+                                                     pf='{}-{}-{}'.format(pn, pe_pv, pr),
+                                                     p='{}-{}'.format(pn, pv)).split()
+        provides = set(cache_data.fn_provides[fn]) - set(pn_default_provides)
+
+        print(pn)
+        for provide in provides:
+            print('  ' + provide)
+
+
+# provide bb completions
+def main(arguments):
+    parser = bbcmd.CompleteParser()
+    parser.add_argument('-S', '--scope',
+                        help='specify a target scope (rather than all recipes. ex. -S core-image-base)')
+    args = parser.parse_args(arguments)
+    if args is None:
+        # showing completions
+        return
+    else:
+        return list(args)
+
+
+if __name__ == '__main__':
+    bbcmd.run_main(main)
