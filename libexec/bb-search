@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Usage: bb search [-h] [-i] [-S SCOPE] [-s | -e | -r | -w] pattern
+# Usage: bb search [-h] [-i] [-W] [-S SCOPE] [-a] [-s | -e | -r | -w] [-R | -P] pattern
 # Summary: Search for bitbake recipes or packages
 # Help: See bb search -h for detailed usage information.
 
