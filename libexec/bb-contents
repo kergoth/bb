@@ -1,0 +1,75 @@
+#!/usr/bin/env python
+# Usage: bb contents [recipe]
+# Summary: Show package contents
+# Help: See bb contents -h for detailed usage information.
+
+import logging
+import os
+import sys
+import warnings
+import bbcmd
+import bb
+import bb.cache
+import bb.codeparser
+
+logger = logging.getLogger('bb.contents')
+
+def get_data(tinfoil, recipe=None):
+    if recipe:
+        tinfoil.prepare_taskdata([recipe])
+        targetid = tinfoil.get_buildid(recipe)
+        if targetid is None:
+            return
+
+        fnid = tinfoil.taskdata.build_targets[targetid][0]
+        fn = tinfoil.taskdata.fn_index[fnid]
+
+        try:
+            recipe_data = bb.cache.Cache.loadDataFull(fn, tinfoil.cooker.get_file_appends(fn),
+                                                      tinfoil.config_data)
+        except Exception:
+            logger.exception("Unable to read %s", fn)
+            raise
+        return recipe_data
+    else:
+        return tinfoil.localdata
+
+NORM="\033[0m"
+BOLD="\033[1m"
+
+def contents(recipe):
+    bbcmd.setup_log_handler(logging.getLogger('bb'))
+    tinfoil = bbcmd.Tinfoil(output=sys.stderr)
+    tinfoil.prepare(config_only=True)
+    tinfoil.parseRecipes()
+
+    data = get_data(tinfoil, recipe)
+    if not data:
+        return 1
+
+    pkgdir = data.getVar("PKGDEST", True)
+    for package in sorted(os.listdir(pkgdir)):
+        package_root = os.path.join(pkgdir, package)
+        if not os.path.isdir(package_root): continue
+
+        print BOLD + package + NORM
+        for top, dirs, files in os.walk(package_root):
+            dirs.sort()
+            for nm in sorted(files):
+                print os.path.join(top, nm).replace(package_root, "")
+        print
+
+def main(arguments):
+    parser = bbcmd.CompleteParser()
+    parser.add_argument('recipe', help='recipe name')
+    args = parser.parse_args(arguments)
+
+    if args is None:
+        # showing completions
+        return
+    else:
+        return contents(args.recipe)
+
+
+if __name__ == '__main__':
+    bbcmd.run_main(main)
