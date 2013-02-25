@@ -242,7 +242,7 @@ def status(message, outfile=sys.stderr):
 
 def setup_log_handler(logger, output=sys.stderr):
     log_format = bb.msg.BBLogFormatter("%(levelname)s: %(message)s")
-    if output.isatty():
+    if output.isatty() and hasattr(log_format, 'enable_color'):
         log_format.enable_color()
     handler = logging.StreamHandler(output)
     handler.setFormatter(log_format)
