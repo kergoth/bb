@@ -7,7 +7,12 @@ if [ -z "$COMMAND" ]; then
   exit 1
 fi
 
-COMMAND_PATH="$(command -v "bb-$COMMAND")"
+# Support sh- commands too
+COMMAND_PATH="$(command -v "bb-$COMMAND" || true)"
+if [ ! -x "$COMMAND_PATH" ]; then
+	COMMAND_PATH="$(command -v "bb-sh-$COMMAND")"
+fi
+
 if grep -i "^# provide bb completions" "$COMMAND_PATH" >/dev/null; then
   shift
   exec "$COMMAND_PATH" --complete "$@"
