@@ -12,6 +12,7 @@ import bbcmd
 import bb
 import bb.cache
 import bb.codeparser
+import bb.utils
 
 
 logger = logging.getLogger('bb.edit')
