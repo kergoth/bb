@@ -28,8 +28,9 @@ def whatdepends(args):
     for recipe in recipes:
         recipe_id = tinfoil.get_buildid(recipe)
         if recipe_id is None:
-            # Not buildable or recipe doesn't exist, abort
-            return 1
+            if recipe not in tinfoil.cooker.status.ignored_dependencies:
+                # Not buildable or recipe doesn't exist, abort
+                return 1
 
     targetid = tinfoil.get_buildid(args.target)
     if args.recursive:

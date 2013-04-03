@@ -107,6 +107,9 @@ class Tinfoil(bb.tinfoil.Tinfoil):
 
     def get_buildid(self, target):
         if not self.taskdata.have_build_target(target):
+            if target in self.cooker.status.ignored_dependencies:
+                return
+
             reasons = self.taskdata.get_reasons(target)
             if reasons:
                 self.logger.error("No buildable '%s' recipe found:\n%s", target, "\n".join(reasons))
