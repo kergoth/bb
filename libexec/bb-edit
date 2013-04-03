@@ -22,7 +22,7 @@ def prompt(filenames, editor='vi'):
     """Show a basic menu to select a file to edit"""
     while True:
         for number, filename in enumerate(filenames):
-            print('{}) {}'.format(number, filename))
+            print('{0}) {1}'.format(number, filename))
         print('q) quit')
 
         try:
@@ -41,7 +41,7 @@ def prompt(filenames, editor='vi'):
         try:
             number = int(answer)
         except ValueError:
-            print("Invalid input '{}'".format(answer))
+            print("Invalid input '{0}'".format(answer))
             continue
 
         run_editor([filenames[number]], editor)

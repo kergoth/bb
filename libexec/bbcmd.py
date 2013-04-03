@@ -224,7 +224,7 @@ def iter_uniq(iterable):
 @contextlib.contextmanager
 def status(message, outfile=sys.stderr):
     """Show the user what we're doing, and whether we succeed"""
-    outfile.write('{}..'.format(message))
+    outfile.write('{0}..'.format(message))
     outfile.flush()
     try:
         yield

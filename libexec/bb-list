@@ -46,8 +46,8 @@ def list(args):
             pe_pv = pv
 
         pn_default_provides = global_provides.format(pn=pn,
-                                                     pf='{}-{}-{}'.format(pn, pe_pv, pr),
-                                                     p='{}-{}'.format(pn, pv)).split()
+                                                     pf='{0}-{1}-{2}'.format(pn, pe_pv, pr),
+                                                     p='{0}-{1}'.format(pn, pv)).split()
         provides = set(cache_data.fn_provides[fn]) - set(pn_default_provides)
 
         print(pn)

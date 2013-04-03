@@ -43,7 +43,7 @@ def search(args):
         if args.ignore_case:
             flags |= re.IGNORECASE
         if args.word:
-            args.pattern = r'\b{}\b'.format(args.pattern)
+            args.pattern = r'\b{0}\b'.format(args.pattern)
         args.pattern = re.compile(args.pattern, flags)
         search = lambda pattern, string: pattern.search(string)
     elif args.word:
