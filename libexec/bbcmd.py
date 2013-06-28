@@ -19,6 +19,7 @@ import bb.msg
 import bb.utils
 import bb.providers
 import bb.tinfoil
+from bb.cookerdata import CookerConfiguration, ConfigParameters
 
 
 class Terminate(BaseException):
@@ -35,12 +36,12 @@ class Tinfoil(bb.tinfoil.Tinfoil):
         if output is not None:
             setup_log_handler(self.logger, output)
 
-        initialenv = os.environ.copy()
-        bb.utils.clean_environment()
-        self.config = bb.tinfoil.TinfoilConfig(parse_only=True)
-        self.cooker = bb.cooker.BBCooker(self.config, self.register_idle_function,
-                                         initialenv)
-        self.config_data = self.cooker.configuration.data
+        self.config = self.config = CookerConfiguration()
+        configparams = bb.tinfoil.TinfoilConfigParameters(parse_only=True)
+        self.config.setConfigParameters(configparams)
+        self.config.setServerRegIdleCallback(self.register_idle_function)
+        self.cooker = bb.cooker.BBCooker(self.config)
+        self.config_data = self.cooker.data
         bb.providers.logger.setLevel(logging.ERROR)
         bb.taskdata.logger.setLevel(logging.CRITICAL)
         self.cooker_data = None
