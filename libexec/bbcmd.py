@@ -180,7 +180,7 @@ class Tinfoil(bb.tinfoil.Tinfoil):
 
     def parse_recipe_file(self, recipe_filename):
         """Given a recipe filename, do a full parse of it"""
-        appends = self.cooker.get_file_appends(recipe_filename)
+        appends = self.cooker.collection.get_file_appends(recipe_filename)
         try:
             recipe_data = bb.cache.Cache.loadDataFull(recipe_filename,
                                                       appends,

@@ -25,7 +25,7 @@ def get_data(tinfoil, recipe=None):
         fn = tinfoil.taskdata.fn_index[fnid]
 
         try:
-            recipe_data = bb.cache.Cache.loadDataFull(fn, tinfoil.cooker.get_file_appends(fn),
+            recipe_data = bb.cache.Cache.loadDataFull(fn, tinfoil.cooker.collection.get_file_appends(fn),
                                                       tinfoil.config_data)
         except Exception:
             logger.exception("Unable to read %s", fn)
