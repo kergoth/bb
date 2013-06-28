@@ -53,7 +53,7 @@ def search(args):
     tinfoil = bbcmd.Tinfoil(output=sys.stderr)
     tinfoil.prepare()
 
-    cache_data = tinfoil.cooker.status
+    cache_data = tinfoil.cooker.recipecache
 
     # Build the maps from fn to the runtime provide information
     fn_rprovides = defaultdict(set)

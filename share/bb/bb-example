@@ -33,7 +33,7 @@ def example(args):
     # tinfoil.prepare(config_only=True) - if we don't need recipes parsed
     tinfoil.prepare()
 
-    cache_data = tinfoil.cooker.status
+    cache_data = tinfoil.cooker.recipecache
 
     if args.tmpdir:
         print(tinfoil.localdata.getVar('TMPDIR', True))

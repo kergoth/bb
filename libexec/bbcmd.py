@@ -54,7 +54,7 @@ class Tinfoil(bb.tinfoil.Tinfoil):
 
 
     def prepare_taskdata(self, provided=None, rprovided=None):
-        self.cache_data = self.cooker.status
+        self.cache_data = self.cooker.recipecache
         if self.taskdata is None:
             self.taskdata = bb.taskdata.TaskData(abort=False)
 
@@ -108,7 +108,7 @@ class Tinfoil(bb.tinfoil.Tinfoil):
 
     def get_buildid(self, target):
         if not self.taskdata.have_build_target(target):
-            if target in self.cooker.status.ignored_dependencies:
+            if target in self.cooker.recipecache.ignored_dependencies:
                 return
 
             reasons = self.taskdata.get_reasons(target)
@@ -137,7 +137,7 @@ class Tinfoil(bb.tinfoil.Tinfoil):
         return filenames
 
     def all_filenames(self):
-        return self.cooker.status.file_checksums.keys()
+        return self.cooker.recipecache.file_checksums.keys()
 
     def all_preferred_filenames(self):
         """Return all the recipes we have cached, filtered by providers.
@@ -146,10 +146,10 @@ class Tinfoil(bb.tinfoil.Tinfoil):
         """
         filenames = set()
         excluded = set()
-        for provide, fns in self.cooker.status.providers.iteritems():
+        for provide, fns in self.cooker.recipecache.providers.iteritems():
             eligible, foundUnique = bb.providers.filterProviders(fns, provide,
                                                                  self.localdata,
-                                                                 self.cooker.status)
+                                                                 self.cooker.recipecache)
             preferred = eligible[0]
             if len(fns) > 1:
                 # Excluding non-preferred providers in multiple-provider
@@ -164,7 +164,7 @@ class Tinfoil(bb.tinfoil.Tinfoil):
 
     def provide_to_fn(self, provide):
         """Return the preferred recipe for the specified provide"""
-        filenames = self.cooker.status.providers[provide]
+        filenames = self.cooker.recipecache.providers[provide]
         eligible, foundUnique = bb.providers.filterProviders(filenames, provide, self.localdata)
         return eligible[0]
 
