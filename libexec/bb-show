@@ -23,7 +23,7 @@ def escape_shell_value(value):
     return value
 
 
-def format_variable(data, variable, flag=None, shell=False):
+def format_variable(data, variable, flag=None, shell=False, show_unexpanded=True):
     if flag:
         unexpanded = data.getVarFlag(variable, flag, False)
         pattern = '%s[%s]=%%s' % (variable, flag)
@@ -47,7 +47,7 @@ def format_variable(data, variable, flag=None, shell=False):
         return '# ' + pattern % unexpanded
     else:
         message = ''
-        if unexpanded != expanded:
+        if show_unexpanded and unexpanded != expanded:
             message += '# ' + pattern % unexpanded + '\n'
 
         if data.getVarFlag(variable, 'export'):
@@ -62,7 +62,7 @@ def format_variable(data, variable, flag=None, shell=False):
 
 
 ignored_flags = ('func', 'python', 'export', 'export_func')
-def print_variable_flags(data, variable):
+def print_variable_flags(data, variable, show_unexpanded=True):
     flags = data.getVarFlags(variable)
     if not flags:
         return
@@ -71,10 +71,10 @@ def print_variable_flags(data, variable):
         if flag.startswith('_') or flag in ignored_flags:
             continue
         value = str(value)
-        print(format_variable(data, variable, flag))
+        print(format_variable(data, variable, flag, show_unexpanded=show_unexpanded))
 
 
-def print_variable(data, variable):
+def print_variable(data, variable, show_unexpanded=True):
     unexpanded = data.getVar(variable, False)
     if unexpanded is None:
         return
@@ -94,7 +94,7 @@ def print_variable(data, variable):
 
             print("%s () {\n%s}\n" % (variable, value))
     else:
-        print(format_variable(data, variable, shell=True))
+        print(format_variable(data, variable, shell=True, show_unexpanded=show_unexpanded))
 
 
 def variable_function_deps(data, variable, deps, seen):
@@ -161,17 +161,24 @@ def show(args):
     tinfoil.prepare(config_only=True)
 
     if args.recipe:
-        tinfoil.parseRecipes()
+        try:
+            tinfoil.parseRecipes()
+        except bb.BBHandledException:
+            return 2
 
-    data = tinfoil.parse_metadata(args.recipe)
+    try:
+        data = tinfoil.parse_metadata(args.recipe)
+    except bb.BBHandledException:
+        return 1
+
     if not data:
         return 1
 
     variables = sorted_variables(data, args.variables, args.dependencies)
     for variable in variables:
-        print_variable(data, variable)
+        print_variable(data, variable, show_unexpanded=not args.brief)
         if args.flags:
-            print_variable_flags(data, variable)
+            print_variable_flags(data, variable, show_unexpanded=not args.brief)
 
 
 # provide bb completions
@@ -180,6 +187,7 @@ def main(arguments):
     parser.add_argument('-d', '--dependencies', action='store_true',
             help='also show functions the vars depend on')
     parser.add_argument('-f', '--flags', action='store_true', help='also show flags')
+    parser.add_argument('-b', '--brief', action='store_true', help="brief mode -- don't show unexpanded versions of variables")
     parser.add_argument('-r', '--recipe', help='operate against this recipe')
     parser.add_argument('variables', nargs='*', help='variables to show (default: all variables)')
 
