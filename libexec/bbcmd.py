@@ -93,11 +93,11 @@ class Tinfoil(bb.tinfoil.Tinfoil):
 
         dependees = self.get_dependees(fn) or []
         for dependee in dependees:
+            yield dependee, depth
+
             if dependee in seen:
                 continue
             seen.add(dependee)
-            yield dependee, depth
-
             for _dependee, _depth in self.rec_get_dependees(dependee, depth+1, seen):
                 yield _dependee, _depth
 
@@ -114,10 +114,10 @@ class Tinfoil(bb.tinfoil.Tinfoil):
 
         dependees = self.get_rdependees(fn) or []
         for dependee in dependees:
+            yield dependee, depth
             if dependee in seen:
                 continue
             seen.add(dependee)
-            yield dependee, depth
 
             for _dependee, _depth in self.rec_get_rdependees(dependee, depth+1, seen):
                 yield _dependee, _depth
