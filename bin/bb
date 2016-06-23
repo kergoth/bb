@@ -1,1 +1,2 @@
-../libexec/bb
+#!/bin/sh
+exec $(dirname $0)/../libexec/bb $@

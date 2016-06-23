@@ -53,7 +53,7 @@ def cooker_log():
     os.system("less %s" % get_latest(logdir))
 
 
-def recipe_log(recipe, task):
+def recipe_log(recipe, task, basename):
     # tinfoil sets up log output for the bitbake loggers, but bb uses
     # a separate namespace at this time
     bbcmd.setup_log_handler(logging.getLogger('bb'))
@@ -69,11 +69,11 @@ def recipe_log(recipe, task):
     tempdir = data.getVar("T", True)
 
     if task is None:
-        os.system("less %s" % get_latest(tempdir, "log.do_"))
+        os.system("less %s" % get_latest(tempdir, basename))
     else:
         # Latest log for this task, so just follow the symlink for now.
         # TODO use get_latest?
-        os.system("less %s/log.do_%s" % (tempdir, task))
+        os.system("less %s/%s%s" % (tempdir, basename, task))
 
 # provide bb completions
 def main(arguments):
@@ -83,6 +83,7 @@ def main(arguments):
     # just recipe -> latest recipe log ("the one that just failed")
     parser.add_argument('recipe', help='recipe name', nargs='?')
     parser.add_argument('task', help='task name', nargs='?')
+    parser.add_argument('-r', '--run', help='show the run, not log', action="store_true")
     args = parser.parse_args(arguments)
 
     if args is None:
@@ -91,7 +92,8 @@ def main(arguments):
     elif args.recipe is None:
         return cooker_log()
     else:
-        return recipe_log(args.recipe, args.task)
+        basename = args.run and "run.do_" or "log.do_"
+        return recipe_log(args.recipe, args.task, basename)
 
 
 if __name__ == '__main__':
