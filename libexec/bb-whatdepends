@@ -46,9 +46,9 @@ def whatdepends(args):
     else:
         seen = set([filename])
         for dep_fn in tinfoil.get_dependees(filename):
-            dep_target = tinfoil.cache_data.pkg_fn[dep_fn]
-            if dep_target not in seen:
-                seen.add(dep_target)
+            if dep_fn not in seen:
+                seen.add(dep_fn)
+                dep_target = tinfoil.cache_data.pkg_fn[dep_fn]
                 print(dep_target)
 
         for dep_fn in tinfoil.get_rdependees(filename):
