@@ -87,47 +87,80 @@ class Tinfoil(bb.tinfoil.Tinfoil):
 
         self.taskdata.add_unresolved(self.localdata, self.cache_data)
 
+    def rec_get_all_dependees(self, fn, depth=0, seen=None):
+        if seen is None:
+            seen = set()
+
+        all_dependees = self.get_all_dependees(fn) or []
+        for dependee in all_dependees:
+            was_seen = dependee in seen
+            yield dependee, depth, was_seen
+            if was_seen:
+                continue
+
+            seen.add(dependee)
+            for _dependee, _depth, _was_seen in self.rec_get_all_dependees(dependee, depth+1, seen):
+                yield _dependee, _depth, _was_seen
+
+    def get_all_dependees(self, fn):
+        all_dependees = set()
+
+        for target, fns in self.taskdata.build_targets.items():
+            if fns and fns[0] == fn:
+                all_dependees |= set(self.taskdata.get_dependees(target))
+
+        for rtarget, fns in self.taskdata.run_targets.items():
+            if fns and fns[0] == fn:
+                all_dependees |= set(self.taskdata.get_rdependees(rtarget))
+
+        if fn in all_dependees:
+            all_dependees.remove(fn)
+
+        return sorted(all_dependees)
+
     def rec_get_dependees(self, fn, depth=0, seen=None):
         if seen is None:
             seen = set()
 
         dependees = self.get_dependees(fn) or []
         for dependee in dependees:
-            if dependee in seen:
+            was_seen = dependee in seen
+            yield dependee, depth, was_seen
+            if was_seen:
                 continue
-            seen.add(dependee)
-            yield dependee, depth
 
-            for _dependee, _depth in self.rec_get_dependees(dependee, depth+1, seen):
-                yield _dependee, _depth
+            seen.add(dependee)
+            for _dependee, _depth, _was_seen in self.rec_get_dependees(dependee, depth+1, seen):
+                yield _dependee, _depth, _was_seen
 
     def get_dependees(self, fn):
         dependees = set()
         for target, fns in self.taskdata.build_targets.items():
             if fns and fns[0] == fn:
                 dependees |= set(self.taskdata.get_dependees(target))
-        return dependees
+        return sorted(dependees)
 
     def rec_get_rdependees(self, fn, depth=0, seen=None):
         if seen is None:
             seen = set()
 
-        dependees = self.get_rdependees(fn) or []
-        for dependee in dependees:
-            if dependee in seen:
+        rdependees = self.get_rdependees(fn) or []
+        for rdependee in rdependees:
+            was_seen = rdependee in seen
+            yield rdependee, depth, was_seen
+            if was_seen:
                 continue
-            seen.add(dependee)
-            yield dependee, depth
 
-            for _dependee, _depth in self.rec_get_rdependees(dependee, depth+1, seen):
-                yield _dependee, _depth
+            seen.add(rdependee)
+            for _rdependee, _depth, _was_seen in self.rec_get_rdependees(rdependee, depth+1, seen):
+                yield _rdependee, _depth, _was_seen
 
     def get_rdependees(self, fn):
         dependees = set()
         for target, fns in self.taskdata.run_targets.items():
             if fns and fns[0] == fn:
                 dependees |= set(self.taskdata.get_rdependees(target))
-        return dependees
+        return sorted(dependees)
 
     def get_filename(self, target):
         if not self.taskdata.have_build_target(target):
