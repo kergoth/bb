@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Usage: bb list
 # Summary: List available recipes / provides
 # Help: See bb list -h for detailed usage information.

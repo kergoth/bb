@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Usage: bb edit [-h] [-p] [-r] target [target ...]
 # Summary: Edit bitbake recipes, included files, and bbappends
 # Help: See bb edit -h for detailed usage information.
@@ -7,7 +7,6 @@ import logging
 import os
 import pipes
 import sys
-import warnings
 import bbcmd
 import bb
 import bb.cache
@@ -74,6 +73,7 @@ def targets_to_files(tinfoil, targets, with_includes=True):
 
             files.extend(final_included)
         else:
+            appends = tinfoil.cooker.collection.get_file_appends(filename)
             files.extend(appends)
     return list(bbcmd.iter_uniq(bb.cache.Cache.virtualfn2realfn(f)[0] for f in files))
 
@@ -89,7 +89,8 @@ def edit(args):
     tinfoil.prepare()
     tinfoil.prepare_taskdata(args.targets)
 
-    files_to_edit = targets_to_files(tinfoil, args.targets, with_includes=not args.just_recipes)
+    files_to_edit = targets_to_files(tinfoil, args.targets,
+                                     with_includes=not args.just_recipes)
     if files_to_edit is None:
         return 1
 

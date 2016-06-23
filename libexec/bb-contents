@@ -1,26 +1,12 @@
-#!/usr/bin/env python
-# Usage: bb contents [recipe]
-# Summary: Show package contents
-# Help: See bb contents -h for detailed usage information.
+#!/bin/sh
 
-import subprocess
-import bbcmd
+if [ $# -ne 1 ]; then
+    echo >&2 "Usage: ${0##*/} RECIPE"
+    exit 0
+elif [ "$1" = "--complete" ]; then
+    exit 0
+fi
 
-def main(arguments):
-    parser = bbcmd.CompleteParser()
-    parser.add_argument('recipe', help='recipe name')
-    args = parser.parse_args(arguments)
-
-    if args is None:
-        # showing completions
-        return
-    else:
-        print "You can also use oe-pkgdata-util list-pkg-files -p RECIPE"
-
-        ret = subprocess.call(['oe-pkgdata-util', 'list-pkg-files',
-                               '--recipe', args.recipe],
-                              stdout=subprocess.STDOUT)
-        return ret
-
-if __name__ == '__main__':
-    bbcmd.run_main(main)
+echo "You can also use: oe-pkgdata-util list-pkg-files -p RECIPE"
+echo
+oe-pkgdata-util list-pkg-files -p "$1"

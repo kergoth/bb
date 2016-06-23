@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Usage: bb log [recipe] [task]
 # Summary: Show bitbake logs
 # Help: See bb log -h for detailed usage information.
@@ -17,12 +17,9 @@ logger = logging.getLogger('bb.log')
 def get_data(tinfoil, recipe=None):
     if recipe:
         tinfoil.prepare_taskdata([recipe])
-        targetid = tinfoil.get_buildid(recipe)
-        if targetid is None:
+        fn = tinfoil.get_filename(recipe)
+        if not fn:
             return
-
-        fnid = tinfoil.taskdata.build_targets[targetid][0]
-        fn = tinfoil.taskdata.fn_index[fnid]
 
         try:
             recipe_data = bb.cache.Cache.loadDataFull(fn, tinfoil.cooker.collection.get_file_appends(fn),
