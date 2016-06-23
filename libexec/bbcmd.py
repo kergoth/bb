@@ -71,6 +71,7 @@ class Tinfoil(bb.tinfoil.Tinfoil):
         self.taskdata.add_unresolved(self.localdata, self.cache_data)
 
     def add_provided(self, provided):
+        provided = list(provided)
         if 'world' in provided:
             if not self.cache_data.world_target:
                 self.cooker.buildWorldTargetList()
