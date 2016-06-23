@@ -31,9 +31,9 @@ def whatdepends(args):
         if (not tinfoil.taskdata.have_build_target(recipe) and
             recipe not in ignored):
             logger.error('No build target for %s' % recipe)
+            return 1
 
     provmap = tinfoil.taskdata.get_providermap()
-    revmap = dict((v, k) for k, v in provmap.items())
     filename = provmap.get(args.target)
 
     if args.recursive:
