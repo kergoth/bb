@@ -131,7 +131,8 @@ def main(arguments):
     parser.add_argument('-W', '--word', action='store_true',
                         help='search for a particular word (only supported by the regex and wildcard searches)')
     parser.add_argument('-S', '--scope',
-                        help='specify a target scope (rather than all recipes. ex. -S core-image-base)')
+                        help='specify a target scope (rather than all recipes. ex. -S core-image-base)',
+                        default=(os.getenv('BB_RECIPE_SCOPE') or None))
     parser.add_argument('-a', '--all', action='store_true',
                         help='display all matches, even if we have already matched a given recipe')
     mode = parser.add_mutually_exclusive_group()
