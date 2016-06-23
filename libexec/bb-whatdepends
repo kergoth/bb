@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Usage: bb whatdepends [-h] [-r] target [recipes [recipes ...]]
 # Summary: Show what depends on the specified target
 # Help: See bb whatdepends -h for detailed usage information.
@@ -24,21 +24,27 @@ def whatdepends(args):
     recipes = list(args.recipes)
     recipes.append(args.target)
     tinfoil.prepare_taskdata(recipes)
-
+    ignored = tinfoil.cooker.recipecache.ignored_dependencies | set(['universe', 'world'])
     for recipe in recipes:
-        recipe_id = tinfoil.get_buildid(recipe)
-        if recipe_id is None:
-            if recipe not in tinfoil.cooker.recipecache.ignored_dependencies:
-                # Not buildable or recipe doesn't exist, abort
-                return 1
+        if (not tinfoil.taskdata.have_build_target(recipe) and
+            recipe not in ignored):
+            logger.error('No build target for %s' % recipe)
 
-    targetid = tinfoil.get_buildid(args.target)
+    provmap = tinfoil.taskdata.get_providermap()
+    revmap = dict((v, k) for k, v in provmap.items())
+    filename = provmap.get(args.target)
+
     if args.recursive:
-        for dep_id, depth in tinfoil.rec_get_dependees(targetid):
-            print('  '*depth + tinfoil.taskdata.build_names_index[dep_id])
+        for dep_fn, depth in tinfoil.rec_get_dependees(filename, seen=[filename]):
+            dep_target = tinfoil.cache_data.pkg_fn[dep_fn]
+            print('  '*depth + dep_target)
     else:
-        for dep_fnid, dep_id in tinfoil.get_dependees(targetid, seen=set()):
-            print(tinfoil.taskdata.build_names_index[dep_id])
+        seen = set([filename])
+        for dep_fn in tinfoil.get_dependees(filename):
+            dep_target = tinfoil.cache_data.pkg_fn[dep_fn]
+            if dep_target not in seen:
+                seen.add(dep_target)
+                print(dep_target)
 
 
 # provide bb completions
