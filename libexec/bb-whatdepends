@@ -37,13 +37,27 @@ def whatdepends(args):
     filename = provmap.get(args.target)
 
     if args.recursive:
-        for dep_fn, depth in tinfoil.rec_get_all_dependees(filename):
+        if args.run_time_only:
+            func = tinfoil.rec_get_rdependees
+        elif args.build_time_only:
+            func = tinfoil.rec_get_dependees
+        else:
+            func = tinfoil.rec_get_all_dependees
+
+        for dep_fn, depth in func(filename):
             if dep_fn == filename:
                 continue
             dep_target = tinfoil.cache_data.pkg_fn[dep_fn]
             print('  '*depth + dep_target)
     else:
-        for dep_fn in tinfoil.get_all_dependees(filename):
+        if args.run_time_only:
+            func = tinfoil.get_rdependees
+        elif args.build_time_only:
+            func = tinfoil.get_dependees
+        else:
+            func = tinfoil.get_all_dependees
+
+        for dep_fn in func(filename):
             if dep_fn == filename:
                 continue
             dep_target = tinfoil.cache_data.pkg_fn[dep_fn]
@@ -55,6 +69,11 @@ def main(arguments):
     parser = bbcmd.CompleteParser()
     parser.add_argument('-r', '--recursive', action='store_true',
             help='operate recursively, with indent reflecting depth')
+    namespace = parser.add_mutually_exclusive_group()
+    namespace.add_argument('-B', '--build-time-only', action='store_true',
+                           help='show build-time dependencies only')
+    namespace.add_argument('-R', '--run-time-only', action='store_true',
+                           help='show run-time dependencies only')
     parser.add_argument('target')
     parser.add_argument('recipes', default=['universe'], nargs='*',
             help='recipes to check for dependencies on target (default: universe)')
