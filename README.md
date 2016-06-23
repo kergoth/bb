@@ -117,16 +117,19 @@ Usage
       -r RECIPE, --recipe RECIPE
                             operate against this recipe
 
-    bb whatdepends [-h] [-r] target [recipes [recipes ...]]
+    bb-whatdepends [-h] [-r] [-B | -R] target [recipes [recipes ...]]
 
     positional arguments:
       target
-      recipes          recipes to check for dependencies on target (default:
-                       universe)
+      recipes               recipes to check for dependencies on target (default:
+                            universe)
 
     optional arguments:
-      -h, --help       show this help message and exit
-      -r, --recursive  operate recursively, with indent reflecting depth
+      -h, --help            show this help message and exit
+      -r, --recursive       operate recursively, with indent reflecting depth
+      -B, --build-time-only
+                            show build-time dependencies only
+      -R, --run-time-only   show run-time dependencies only
 
 
 Examples
@@ -224,24 +227,33 @@ Examples
     PROVIDES="linux-qoriq-sdk-3.0.34 linux-qoriq-sdk-3.0.34-r9b linux-qoriq-sdk  virtual/kernel"
     # Determine what pulls ncurses into a build of core-image-minimal
 
-    $ bb whatdepends ncurses core-image-minimal
+    $ bb whatdepends -B ncurses core-image-minimal
     Parsing recipes..done.
-    virtual/gettext
-    virtual/libintl
+    Preparing task data...done
     readline
     util-linux
-    sqlite3
+    dpkg
+    bash
+    slang
     attr
 
-    # Show the reverse dependencies recursively. So, see what depends on attr
-    # in a build of core-image-minmal, then what depends on the items that
-    # depend on attr, etc.
-
-    $ bb whatdepends -r attr core-image-minimal
+    $ bb whatdepends -r -B ncurses core-image-minimal
     Parsing recipes..done.
-    acl
-    libcap
-      avahi
-      libgcrypt
-        gtk+
-          libglade
+    Preparing task data...done
+    readline
+      systemd
+        dbus
+      gawk
+    util-linux
+      systemd..
+      e2fsprogs
+    dpkg
+    bash
+    slang
+      libnewt
+        chkconfig
+    attr
+      acl
+        systemd..
+      libcap
+        systemd..
