@@ -1,12 +1,41 @@
 #!/bin/sh
 
+usage () {
+    cat >&2 <<END
+Usage: ${0##*/} [-p] TARGET
+
+TARGET is a recipe name, unless -p is specified, when it's a package name.
+END
+    exit 1
+}
+
+package=0
+while getopts ph opt; do
+    case "$opt" in
+        p)
+            package=1
+            ;;
+        h|\?)
+            usage
+            ;;
+    esac
+done
+shift $((OPTIND - 1))
+
 if [ $# -ne 1 ]; then
-    echo >&2 "Usage: ${0##*/} RECIPE"
-    exit 0
-elif [ "$1" = "--complete" ]; then
+    echo >&2 "Error: incorrect number of arguments"
+    usage
+fi
+
+if [ "$1" = "--complete" ]; then
     exit 0
 fi
 
-echo "You can also use: oe-pkgdata-util list-pkg-files -p RECIPE"
-echo
-oe-pkgdata-util list-pkg-files -p "$1"
+if [ $package -eq 0 ]; then
+    pkgdata_arg=" -p"
+else
+    pkgdata_arg=
+fi
+printf 'You can also run: oe-pkgdata-util list-pkg-files%s "%s"\n' "$pkgdata_arg" "$1"
+printf '\n'
+oe-pkgdata-util list-pkg-files $pkgdata_arg "$1"
