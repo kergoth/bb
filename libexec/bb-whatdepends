@@ -37,27 +37,17 @@ def whatdepends(args):
     filename = provmap.get(args.target)
 
     if args.recursive:
-        seen = set([filename])
-        for dep_fn, depth in tinfoil.rec_get_dependees(filename, seen=seen):
-            dep_target = tinfoil.cache_data.pkg_fn[dep_fn]
-            print('  '*depth + dep_target)
-
-        for dep_fn, depth in tinfoil.rec_get_rdependees(filename, seen=seen):
+        for dep_fn, depth in tinfoil.rec_get_all_dependees(filename):
+            if dep_fn == filename:
+                continue
             dep_target = tinfoil.cache_data.pkg_fn[dep_fn]
             print('  '*depth + dep_target)
     else:
-        seen = set([filename])
-        for dep_fn in tinfoil.get_dependees(filename):
-            if dep_fn not in seen:
-                seen.add(dep_fn)
-                dep_target = tinfoil.cache_data.pkg_fn[dep_fn]
-                print(dep_target)
-
-        for dep_fn in tinfoil.get_rdependees(filename):
+        for dep_fn in tinfoil.get_all_dependees(filename):
+            if dep_fn == filename:
+                continue
             dep_target = tinfoil.cache_data.pkg_fn[dep_fn]
-            if dep_target not in seen:
-                seen.add(dep_target)
-                print(dep_target)
+            print(dep_target)
 
 
 # provide bb completions
