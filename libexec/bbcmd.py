@@ -91,10 +91,7 @@ class Tinfoil(bb.tinfoil.Tinfoil):
         if seen is None:
             seen = set()
 
-        dependees = self.get_dependees(fn)
-        if not dependees:
-            return
-
+        dependees = self.get_dependees(fn) or []
         for dependee in dependees:
             if dependee in seen:
                 continue
