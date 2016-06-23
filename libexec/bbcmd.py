@@ -108,6 +108,27 @@ class Tinfoil(bb.tinfoil.Tinfoil):
                 dependees |= set(self.taskdata.get_dependees(target))
         return dependees
 
+    def rec_get_rdependees(self, fn, depth=0, seen=None):
+        if seen is None:
+            seen = set()
+
+        dependees = self.get_rdependees(fn) or []
+        for dependee in dependees:
+            if dependee in seen:
+                continue
+            seen.add(dependee)
+            yield dependee, depth
+
+            for _dependee, _depth in self.rec_get_rdependees(dependee, depth+1, seen):
+                yield _dependee, _depth
+
+    def get_rdependees(self, fn):
+        dependees = set()
+        for target, fns in self.taskdata.run_targets.items():
+            if fns and fns[0] == fn:
+                dependees |= set(self.taskdata.get_rdependees(target))
+        return dependees
+
     def get_filename(self, target):
         if not self.taskdata.have_build_target(target):
             if target in self.cooker.recipecache.ignored_dependencies:
