@@ -23,7 +23,9 @@ def whatdepends(args):
 
     recipes = list(args.recipes)
     recipes.append(args.target)
-    tinfoil.prepare_taskdata(recipes)
+    with bbcmd.status('Preparing task data'):
+        tinfoil.prepare_taskdata(recipes)
+
     ignored = tinfoil.cooker.recipecache.ignored_dependencies | set(['universe', 'world'])
     for recipe in recipes:
         if (not tinfoil.taskdata.have_build_target(recipe) and
