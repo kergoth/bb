@@ -93,13 +93,14 @@ class Tinfoil(bb.tinfoil.Tinfoil):
 
         all_dependees = self.get_all_dependees(fn) or []
         for dependee in all_dependees:
-            yield dependee, depth
-
-            if dependee in seen:
+            was_seen = dependee in seen
+            yield dependee, depth, was_seen
+            if was_seen:
                 continue
+
             seen.add(dependee)
-            for _dependee, _depth in self.rec_get_all_dependees(dependee, depth+1, seen):
-                yield _dependee, _depth
+            for _dependee, _depth, _was_seen in self.rec_get_all_dependees(dependee, depth+1, seen):
+                yield _dependee, _depth, _was_seen
 
     def get_all_dependees(self, fn):
         all_dependees = set()
@@ -123,13 +124,14 @@ class Tinfoil(bb.tinfoil.Tinfoil):
 
         dependees = self.get_dependees(fn) or []
         for dependee in dependees:
-            yield dependee, depth
-
-            if dependee in seen:
+            was_seen = dependee in seen
+            yield dependee, depth, was_seen
+            if was_seen:
                 continue
+
             seen.add(dependee)
-            for _dependee, _depth in self.rec_get_dependees(dependee, depth+1, seen):
-                yield _dependee, _depth
+            for _dependee, _depth, _was_seen in self.rec_get_dependees(dependee, depth+1, seen):
+                yield _dependee, _depth, _was_seen
 
     def get_dependees(self, fn):
         dependees = set()
@@ -142,15 +144,16 @@ class Tinfoil(bb.tinfoil.Tinfoil):
         if seen is None:
             seen = set()
 
-        dependees = self.get_rdependees(fn) or []
-        for dependee in dependees:
-            yield dependee, depth
-            if dependee in seen:
+        rdependees = self.get_rdependees(fn) or []
+        for rdependee in rdependees:
+            was_seen = rdependee in seen
+            yield rdependee, depth, was_seen
+            if was_seen:
                 continue
-            seen.add(dependee)
 
-            for _dependee, _depth in self.rec_get_rdependees(dependee, depth+1, seen):
-                yield _dependee, _depth
+            seen.add(rdependee)
+            for _rdependee, _depth, _was_seen in self.rec_get_rdependees(rdependee, depth+1, seen):
+                yield _rdependee, _depth, _was_seen
 
     def get_rdependees(self, fn):
         dependees = set()
