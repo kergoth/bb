@@ -8,6 +8,8 @@
 repl=$(type -p repl 2>/dev/null)
 if [ $? -ne 0 ]; then
     echo >&2 "Error: 'repl' must be installed to run the bb shell"
+    echo >&2
+    echo >&2 "See https://github.com/defunkt/repl"
     exit 1
 fi
 

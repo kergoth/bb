@@ -1,0 +1,2 @@
+#!/bin/sh
+printf 'export BB_RECIPE_SCOPE="%s"\n' "$1"

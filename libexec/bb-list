@@ -59,7 +59,8 @@ def list(args):
 def main(arguments):
     parser = bbcmd.CompleteParser()
     parser.add_argument('-S', '--scope',
-                        help='specify a target scope (rather than all recipes. ex. -S core-image-base)')
+                        help='specify a target scope (rather than all recipes. ex. -S core-image-base)',
+                        default=(os.getenv('BB_RECIPE_SCOPE') or None))
     args = parser.parse_args(arguments)
     if args is None:
         # showing completions

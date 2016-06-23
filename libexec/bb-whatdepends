@@ -66,17 +66,18 @@ def whatdepends(args):
 
 # provide bb completions
 def main(arguments):
+    default_scope = os.getenv('BB_RECIPE_SCOPE') or 'universe'
     parser = bbcmd.CompleteParser()
     parser.add_argument('-r', '--recursive', action='store_true',
-            help='operate recursively, with indent reflecting depth')
+                        help='operate recursively, with indent reflecting depth')
     namespace = parser.add_mutually_exclusive_group()
     namespace.add_argument('-B', '--build-time-only', action='store_true',
                            help='show build-time dependencies only')
     namespace.add_argument('-R', '--run-time-only', action='store_true',
                            help='show run-time dependencies only')
     parser.add_argument('target')
-    parser.add_argument('recipes', default=['universe'], nargs='*',
-            help='recipes to check for dependencies on target (default: universe)')
+    parser.add_argument('recipes', default=[default_scope], nargs='*',
+                        help='recipes to check for dependencies on target (default: universe)')
     args = parser.parse_args(arguments)
     if args is None:
         # showing completions
