@@ -55,7 +55,7 @@ if [ -z "$print" ]; then
   exit 1
 fi
 
-echo "export PATH=\"${_BB_ROOT}/bin:\${PATH}\""
+echo "export PATH=\"\${PATH}:${_BB_ROOT}/bin\""
 
 case "$shell" in
 bash | zsh )
@@ -64,9 +64,6 @@ bash | zsh )
 esac
 
 commands=(`bb commands --sh`)
-if [ ${#commands} -eq 0 ]; then
-    commands[1]="' '"
-fi
 IFS="|"
 cat <<EOS
 _bb_wrapper() {
@@ -84,4 +81,14 @@ _bb_wrapper() {
 }
 EOS
 
-echo "alias bb=_bb_wrapper"
+# zsh can't pass argument with aliases, but bash can.
+# zsh can have functions with the name being only numbers, but bash can't.
+# fix both cases here by letting zsh have a function, and bash have its alias.
+case "$shell" in
+bash )
+  echo "alias bb=_bb_wrapper"
+  ;;
+zsh )
+  echo "bb=_bb_wrapper"
+  ;;
+esac
