@@ -116,7 +116,7 @@ class Tinfoil(bb.tinfoil.Tinfoil):
         if fn in all_dependees:
             all_dependees.remove(fn)
 
-        return all_dependees
+        return sorted(all_dependees)
 
     def rec_get_dependees(self, fn, depth=0, seen=None):
         if seen is None:
@@ -138,7 +138,7 @@ class Tinfoil(bb.tinfoil.Tinfoil):
         for target, fns in self.taskdata.build_targets.items():
             if fns and fns[0] == fn:
                 dependees |= set(self.taskdata.get_dependees(target))
-        return dependees
+        return sorted(dependees)
 
     def rec_get_rdependees(self, fn, depth=0, seen=None):
         if seen is None:
@@ -160,7 +160,7 @@ class Tinfoil(bb.tinfoil.Tinfoil):
         for target, fns in self.taskdata.run_targets.items():
             if fns and fns[0] == fn:
                 dependees |= set(self.taskdata.get_rdependees(target))
-        return dependees
+        return sorted(dependees)
 
     def get_filename(self, target):
         if not self.taskdata.have_build_target(target):
