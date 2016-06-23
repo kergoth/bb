@@ -1,12 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Usage: bb show [-h] [-d] [-f] [-r RECIPE] [variables [variables ...]]
 # Summary: Show bitbake metadata (global or recipe)
 # Help: See bb show -h for detailed usage information.
 
 import logging
-import os
 import sys
-import warnings
 import bbcmd
 import bb
 import bb.cache
@@ -53,7 +51,7 @@ def format_variable(data, variable, flag=None, shell=False, show_unexpanded=True
         if data.getVarFlag(variable, 'export', expand=False):
             message += 'export '
 
-        if isinstance(expanded, basestring):
+        if isinstance(expanded, str):
             expanded = '"%s"' % escape_shell_value(expanded)
         else:
             expanded = repr(expanded)
@@ -67,7 +65,7 @@ def print_variable_flags(data, variable, show_unexpanded=True):
     if not flags:
         return
 
-    for flag, value in flags.iteritems():
+    for flag, value in flags.items():
         if flag.startswith('_') or flag in ignored_flags:
             continue
         value = str(value)
