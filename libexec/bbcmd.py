@@ -86,27 +86,31 @@ class Tinfoil(bb.tinfoil.Tinfoil):
 
         self.taskdata.add_unresolved(self.localdata, self.cache_data)
 
-    def rec_get_dependees(self, targetid, depth=0, seen=None):
+    def rec_get_dependees(self, fn, depth=0, seen=None):
         if seen is None:
             seen = set()
 
-        for dependee_fnid, dependee_id in self.get_dependees(targetid, seen):
-            yield dependee_id, depth
+        dependees = self.get_dependees(fn)
+        if not dependees:
+            return
 
-            for _id, _depth in self.rec_get_dependees(dependee_id, depth+1, seen):
-                yield _id, _depth
-
-    def get_dependees(self, targetid, seen):
-        dep_fnids = self.taskdata.get_dependees(targetid)
-        for dep_fnid in dep_fnids:
-            if dep_fnid in seen:
+        for dependee in dependees:
+            if dependee in seen:
                 continue
-            seen.add(dep_fnid)
-            for target in self.taskdata.build_targets:
-                if dep_fnid in self.taskdata.build_targets[target]:
-                    yield dep_fnid, target
+            seen.add(dependee)
+            yield dependee, depth
 
-    def get_buildid(self, target):
+            for _dependee, _depth in self.rec_get_dependees(dependee, depth+1, seen):
+                yield _dependee, _depth
+
+    def get_dependees(self, fn):
+        dependees = set()
+        for target, fns in self.taskdata.build_targets.items():
+            if fns and fns[0] == fn:
+                dependees |= set(self.taskdata.get_dependees(target))
+        return dependees
+
+    def get_filename(self, target):
         if not self.taskdata.have_build_target(target):
             if target in self.cooker.recipecache.ignored_dependencies:
                 return
@@ -118,21 +122,21 @@ class Tinfoil(bb.tinfoil.Tinfoil):
                 self.logger.error("No '%s' recipe found", target)
             return
         else:
-            return self.taskdata.getbuild_id(target)
+            return self.taskdata.build_targets[target][0]
 
     def target_filenames(self):
         """Return the filenames of all of taskdata's targets"""
         filenames = set()
 
-        for targetid in self.taskdata.build_targets:
-            fnid = self.taskdata.build_targets[targetid][0]
-            fn = self.taskdata.fn_index[fnid]
-            filenames.add(fn)
+        for target in self.taskdata.build_targets:
+            target_fns = self.taskdata.build_targets[target]
+            if target_fns:
+                filenames.add(target_fns[0])
 
-        for targetid in self.taskdata.run_targets:
-            fnid = self.taskdata.run_targets[targetid][0]
-            fn = self.taskdata.fn_index[fnid]
-            filenames.add(fn)
+        for target in self.taskdata.run_targets:
+            target_fns = self.taskdata.run_targets[target]
+            if target_fns:
+                filenames.add(target_fns[0])
 
         return filenames
 
@@ -146,7 +150,7 @@ class Tinfoil(bb.tinfoil.Tinfoil):
         """
         filenames = set()
         excluded = set()
-        for provide, fns in self.cooker.recipecache.providers.iteritems():
+        for provide, fns in self.cooker.recipecache.providers.items():
             eligible, foundUnique = bb.providers.filterProviders(fns, provide,
                                                                  self.localdata,
                                                                  self.cooker.recipecache)
@@ -171,12 +175,8 @@ class Tinfoil(bb.tinfoil.Tinfoil):
     def build_target_to_fn(self, target):
         """Given a target, prepare taskdata and return a filename"""
         self.prepare_taskdata([target])
-        targetid = self.get_buildid(target)
-        if targetid is None:
-            return
-        fnid = self.taskdata.build_targets[targetid][0]
-        fn = self.taskdata.fn_index[fnid]
-        return fn
+        filename = self.get_filename(target)
+        return filename
 
     def parse_recipe_file(self, recipe_filename):
         """Given a recipe filename, do a full parse of it"""
