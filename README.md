@@ -1,33 +1,19 @@
-bb
-==
+## bb
 
 Experimentation with a subcommand-based bitbake UI (initially just inspection tools)
 
 
-Known Issues
-------------
-
-- Provider and pn aren't always correctly mapped back and forth.
-
-    - As one concrete example, whatdepends only reports what explicitly lists
-      this exact element in its DEPENDS, it doesn't traverse the providers to
-      find indirect dependencies at this time.
-
-
-To Install
-----------
+### To Install
 
 Run bin/bb init for installation instructions.
 
 
-Future plans
-------------
+### Future plans
 
 See the [Todo](TODO.md) list.
 
 
-Usage
------
+### Usage
 
     bb <command> [<args>]
 
@@ -132,8 +118,7 @@ Usage
       -R, --run-time-only   show run-time dependencies only
 
 
-Examples
---------
+### Examples
 
     $ bb contents bash
     bash
