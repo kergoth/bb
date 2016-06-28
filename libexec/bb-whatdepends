@@ -36,7 +36,32 @@ def whatdepends(args):
     provmap = tinfoil.taskdata.get_providermap()
     filename = provmap.get(args.target)
 
-    if args.recursive:
+    if args.recursive and args.run_time_only and args.filter_rdeps:
+        # FIXME: gather my own info, as rdependees includes info from all task
+        # dependencies, only the specified ones, or none, otherwise we pick up
+        # rdeps from the sdk for an image recipe
+        # FIXME: also pull pkgdata if it's available
+        def pkg_rdependees(pkg, filename):
+            """Return the packages which depend on the specified package, using the rdependee data for the specified filename."""
+            rdependees = tinfoil.get_rdependees(filename)
+            for rdep_fn in rdependees:
+                if rdep_fn == filename:
+                    continue
+                for rdep_pkg, rdep_rdeps in tinfoil.cache_data.rundeps[rdep_fn].items():
+                    if pkg in rdep_rdeps:
+                        yield rdep_pkg, rdep_fn
+
+        def rec_pkg_rdependees(pkg, filename, depth=0):
+            yield pkg, depth
+            for rdep_pkg, rdep_fn in pkg_rdependees(pkg, filename):
+                for _pkg, _depth in rec_pkg_rdependees(rdep_pkg, rdep_fn, depth+1):
+                    yield _pkg, _depth
+
+        filename = tinfoil.taskdata.run_targets[args.target][0]
+        for rdep, rdep_fn in pkg_rdependees(args.target, filename):
+            for pkg, depth in rec_pkg_rdependees(rdep, rdep_fn):
+                print('  '*depth + pkg)
+    elif args.recursive:
         if args.run_time_only:
             func = tinfoil.rec_get_rdependees
         elif args.build_time_only:
@@ -66,6 +91,8 @@ def main(arguments):
     parser = bbcmd.CompleteParser()
     parser.add_argument('-r', '--recursive', action='store_true',
                         help='operate recursively, with indent reflecting depth')
+    parser.add_argument('-f', '--filter-rdeps', action='store_true',
+                        help='only traverse rdeps of rdeps, not all rdeps')
     namespace = parser.add_mutually_exclusive_group()
     namespace.add_argument('-B', '--build-time-only', action='store_true',
                            help='show build-time dependencies only')
