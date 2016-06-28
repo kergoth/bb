@@ -55,7 +55,7 @@ if [ -z "$print" ]; then
   exit 1
 fi
 
-echo "export PATH=\"\${PATH}:${_BB_ROOT}/bin\""
+echo "export PATH=\"${_BB_ROOT}/bin:\${PATH}\""
 
 case "$shell" in
 bash | zsh )
