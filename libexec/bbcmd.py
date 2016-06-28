@@ -124,6 +124,9 @@ class Tinfoil(bb.tinfoil.Tinfoil):
 
         dependees = self.get_dependees(fn) or []
         for dependee in dependees:
+            if dependee == fn:
+                continue
+
             was_seen = dependee in seen
             yield dependee, depth, was_seen
             if was_seen:
@@ -146,6 +149,9 @@ class Tinfoil(bb.tinfoil.Tinfoil):
 
         rdependees = self.get_rdependees(fn) or []
         for rdependee in rdependees:
+            if rdependee == fn:
+                continue
+
             was_seen = rdependee in seen
             yield rdependee, depth, was_seen
             if was_seen:

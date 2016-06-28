@@ -45,8 +45,6 @@ def whatdepends(args):
             func = tinfoil.rec_get_all_dependees
 
         for dep_fn, depth, was_seen in func(filename):
-            if dep_fn == filename:
-                continue
             dep_target = tinfoil.cache_data.pkg_fn[dep_fn]
             print('  '*depth + dep_target + ('..' if was_seen else ''))
     else:
@@ -58,8 +56,6 @@ def whatdepends(args):
             func = tinfoil.get_all_dependees
 
         for dep_fn in func(filename):
-            if dep_fn == filename:
-                continue
             dep_target = tinfoil.cache_data.pkg_fn[dep_fn]
             print(dep_target)
 
