@@ -15,6 +15,7 @@ if not bitbake_paths:
 
 sys.path[0:0] = bitbake_paths
 
+import bb.cache
 import bb.msg
 import bb.utils
 import bb.providers
@@ -27,34 +28,22 @@ class Terminate(BaseException):
 
 
 class Tinfoil(bb.tinfoil.Tinfoil):
-    def __init__(self, output=sys.stdout):
-        # Needed to avoid deprecation warnings with python 2.6
-        warnings.filterwarnings("ignore", category=DeprecationWarning)
+    def __init__(self, output=sys.stdout, tracking=False):
+        super(Tinfoil, self).__init__(output, tracking)
+        self.taskdata = None
+        self.localdata = self.cooker.expanded_data
 
-        # Set up logging
-        self.logger = logging.getLogger('BitBake')
+        # Improved logger handling/formatting
         if output is not None:
+            self.logger.removeHandler(self._log_hdlr)
             setup_log_handler(self.logger, output)
 
-        self.config = self.config = CookerConfiguration()
-        configparams = bb.tinfoil.TinfoilConfigParameters(parse_only=True)
-        self.config.setConfigParameters(configparams)
-        self.config.setServerRegIdleCallback(self.register_idle_function)
-        self.cooker = bb.cooker.BBCooker(self.config)
-        self.config_data = self.cooker.data
-        bb.providers.logger.setLevel(logging.ERROR)
+        # Quiet messages we don't care about in this context
         bb.taskdata.logger.setLevel(logging.CRITICAL)
-        self.cooker_data = None
-        self.taskdata = None
-
-        self.localdata = bb.data.createCopy(self.config_data)
-        self.localdata.finalize()
-        # TODO: why isn't expandKeys a method of DataSmart?
-        bb.data.expandKeys(self.localdata)
 
 
     def prepare_taskdata(self, provided=None, rprovided=None):
-        self.cache_data = self.cooker.recipecache
+        self.cache_data = self.cooker.recipecaches['']
         if self.taskdata is None:
             self.taskdata = bb.taskdata.TaskData(abort=False)
 
@@ -72,6 +61,7 @@ class Tinfoil(bb.tinfoil.Tinfoil):
 
     def add_provided(self, provided):
         provided = list(provided)
+
         if 'world' in provided:
             if not self.cache_data.world_target:
                 self.cooker.buildWorldTargetList()
@@ -170,7 +160,7 @@ class Tinfoil(bb.tinfoil.Tinfoil):
 
     def get_filename(self, target):
         if not self.taskdata.have_build_target(target):
-            if target in self.cooker.recipecache.ignored_dependencies:
+            if target in self.cooker.recipecaches[''].ignored_dependencies:
                 return
 
             reasons = self.taskdata.get_reasons(target)
@@ -199,7 +189,7 @@ class Tinfoil(bb.tinfoil.Tinfoil):
         return filenames
 
     def all_filenames(self):
-        return self.cooker.recipecache.file_checksums.keys()
+        return self.cooker.recipecaches[''].file_checksums.keys()
 
     def all_preferred_filenames(self):
         """Return all the recipes we have cached, filtered by providers.
@@ -208,10 +198,10 @@ class Tinfoil(bb.tinfoil.Tinfoil):
         """
         filenames = set()
         excluded = set()
-        for provide, fns in self.cooker.recipecache.providers.items():
+        for provide, fns in self.cooker.recipecaches[''].providers.items():
             eligible, foundUnique = bb.providers.filterProviders(fns, provide,
                                                                  self.localdata,
-                                                                 self.cooker.recipecache)
+                                                                 self.cooker.recipecaches[''])
             preferred = eligible[0]
             if len(fns) > 1:
                 # Excluding non-preferred providers in multiple-provider
@@ -226,8 +216,8 @@ class Tinfoil(bb.tinfoil.Tinfoil):
 
     def provide_to_fn(self, provide):
         """Return the preferred recipe for the specified provide"""
-        filenames = self.cooker.recipecache.providers[provide]
-        eligible, foundUnique = bb.providers.filterProviders(filenames, provide, self.localdata)
+        filenames = self.cooker.recipecaches[''].providers[provide]
+        eligible, foundUnique = bb.providers.filterProviders(filenames, provide, self.localdata, self.cooker.recipecaches[''])
         return eligible[0]
 
     def build_target_to_fn(self, target):
@@ -239,19 +229,14 @@ class Tinfoil(bb.tinfoil.Tinfoil):
     def parse_recipe_file(self, recipe_filename):
         """Given a recipe filename, do a full parse of it"""
         appends = self.cooker.collection.get_file_appends(recipe_filename)
-        try:
-            recipe_data = bb.cache.Cache.loadDataFull(recipe_filename,
-                                                      appends,
-                                                      self.config_data)
-        except Exception:
-            raise
-        return recipe_data
+        parser = bb.cache.NoCache(self.cooker.databuilder)
+        return parser.loadDataFull(recipe_filename, appends)
 
     def parse_metadata(self, recipe=None):
         """Return metadata, either global or for a particular recipe"""
         if recipe:
             self.prepare_taskdata([recipe])
-            filename = self.build_target_to_fn(recipe)
+            filename = self.provide_to_fn(recipe)
             return self.parse_recipe_file(filename)
         else:
             return self.localdata

@@ -16,14 +16,12 @@ logger = logging.getLogger('bb.log')
 
 def get_data(tinfoil, recipe=None):
     if recipe:
-        tinfoil.prepare_taskdata([recipe])
-        fn = tinfoil.get_filename(recipe)
+        fn = tinfoil.build_target_to_fn(recipe)
         if not fn:
             return
 
         try:
-            recipe_data = bb.cache.Cache.loadDataFull(fn, tinfoil.cooker.collection.get_file_appends(fn),
-                                                      tinfoil.config_data)
+            recipe_data = tinfoil.parse_recipe_file(fn)
         except Exception:
             logger.exception("Unable to read %s", fn)
             raise
