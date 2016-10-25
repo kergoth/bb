@@ -27,7 +27,7 @@ def list(args):
         else:
             filenames = tinfoil.all_preferred_filenames()
 
-    cache_data = tinfoil.cooker.recipecache
+    cache_data = tinfoil.cooker.recipecaches['']
 
     global_data = tinfoil.config_data.createCopy()
     bb.data.expandKeys(global_data)
