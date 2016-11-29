@@ -25,7 +25,7 @@ def prompt(filenames, editor='vi'):
         print('q) quit')
 
         try:
-            orig_answer = raw_input('File to edit? ')
+            orig_answer = input('File to edit? ')
         except EOFError:
             return
 
