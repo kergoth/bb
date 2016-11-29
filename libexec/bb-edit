@@ -94,6 +94,7 @@ def edit(args):
     if files_to_edit is None:
         return 1
 
+    files_to_edit = list(filter(lambda f: os.path.exists(f), files_to_edit))
     if args.prompt:
         prompt(files_to_edit, editor)
     else:
