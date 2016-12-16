@@ -31,7 +31,7 @@ class Tinfoil(bb.tinfoil.Tinfoil):
     def __init__(self, output=sys.stdout, tracking=False):
         super(Tinfoil, self).__init__(output, tracking)
         self.taskdata = None
-        self.localdata = self.cooker.expanded_data
+        self.localdata = self.cooker.data
 
         # Improved logger handling/formatting
         if output is not None:
