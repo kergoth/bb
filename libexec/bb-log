@@ -6,28 +6,10 @@
 import logging
 import os
 import sys
-import warnings
 import bbcmd
 import bb
-import bb.cache
-import bb.codeparser
 
 logger = logging.getLogger('bb.log')
-
-def get_data(tinfoil, recipe=None):
-    if recipe:
-        fn = tinfoil.build_target_to_fn(recipe)
-        if not fn:
-            return
-
-        try:
-            recipe_data = tinfoil.parse_recipe_file(fn)
-        except Exception:
-            logger.exception("Unable to read %s", fn)
-            raise
-        return recipe_data
-    else:
-        return tinfoil.localdata
 
 def get_latest(directory, prefix=None):
     if prefix:
@@ -38,37 +20,28 @@ def get_latest(directory, prefix=None):
 
 def cooker_log():
     bbcmd.setup_log_handler(logging.getLogger('bb'))
-    tinfoil = bbcmd.Tinfoil(output=sys.stderr)
-    tinfoil.prepare(config_only=True)
-    data = get_data(tinfoil)
-
-    logdir = os.path.join(data.getVar("LOG_DIR", True),
-                          "cooker",
-                          data.getVar("MACHINE", True))
-    os.system("less %s" % get_latest(logdir))
+    with bb.tinfoil.Tinfoil() as tinfoil:
+        tinfoil.prepare(config_only=True)
+        d = tinfoil.config_data
+        logdir = os.path.join(d.getVar("LOG_DIR", True),
+                            "cooker",
+                            d.getVar("MACHINE", True))
+        os.system("less %s" % get_latest(logdir))
 
 
 def recipe_log(recipe, task, basename):
-    # tinfoil sets up log output for the bitbake loggers, but bb uses
-    # a separate namespace at this time
     bbcmd.setup_log_handler(logging.getLogger('bb'))
+    with bb.tinfoil.Tinfoil() as tinfoil:
+        tinfoil.prepare()
+        data = tinfoil.parse_recipe(recipe)
+        tempdir = data.getVar("T")
 
-    tinfoil = bbcmd.Tinfoil(output=sys.stderr)
-    tinfoil.prepare(config_only=True)
-    tinfoil.parseRecipes()
-
-    data = get_data(tinfoil, recipe)
-    if not data:
-        return 1
-
-    tempdir = data.getVar("T", True)
-
-    if task is None:
-        os.system("less %s" % get_latest(tempdir, basename))
-    else:
-        # Latest log for this task, so just follow the symlink for now.
-        # TODO use get_latest?
-        os.system("less %s/%s%s" % (tempdir, basename, task))
+        if task is None:
+            os.system("less %s" % get_latest(tempdir, basename))
+        else:
+            # Latest log for this task, so just follow the symlink for now.
+            # TODO use get_latest?
+            os.system("less %s/%s%s" % (tempdir, basename, task))
 
 # provide bb completions
 def main(arguments):
