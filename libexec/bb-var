@@ -1,0 +1,24 @@
+#!/usr/bin/env python3
+# Usage: bb var [recipe] [variable]
+
+import argparse
+import os
+import sys
+import bbcmd
+import bb
+
+# TODO silence bitbake startup
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='bb-var')
+    parser.add_argument('variable', help='variable')
+    parser.add_argument('recipe', help='recipe name', nargs='?')
+    args = parser.parse_args()
+
+    with bb.tinfoil.Tinfoil() as tinfoil:
+        if args.recipe:
+            tinfoil.prepare()
+            data = tinfoil.parse_recipe(args.recipe)
+        else:
+            tinfoil.prepare(config_only=True)
+            data = tinfoil.config_data
+        print(data.getVar(args.variable))
