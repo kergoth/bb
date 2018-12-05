@@ -11,11 +11,15 @@ import bb
 
 logger = logging.getLogger('bb.log')
 
-def get_latest(directory, prefix=None):
+def get_latest(directory, prefix=None, skip_empty=False):
+    # Get the list of files
+    files = [os.path.join(directory, f) for f in os.listdir(directory)]
+    # Possibly filter out files that don't match the prefix
     if prefix:
-        files = [os.path.join(directory, f) for f in os.listdir(directory) if f.startswith(prefix)]
-    else:
-        files = [os.path.join(directory, f) for f in os.listdir(directory)]
+        files = filter(lambda f: os.path.basename(f).startswith(prefix), files)
+    # Possibly lilter out empty files
+    if skip_empty:
+        files = filter(lambda f: os.path.getsize(f) > 0, files)
     return max(files, key=os.path.getmtime)
 
 def cooker_log():
@@ -26,7 +30,7 @@ def cooker_log():
         logdir = os.path.join(d.getVar("LOG_DIR", True),
                             "cooker",
                             d.getVar("MACHINE", True))
-        os.system("less %s" % get_latest(logdir))
+        os.system("less %s" % get_latest(logdir, skip_empty=True))
 
 
 def recipe_log(recipe, task, basename):
@@ -39,7 +43,7 @@ def recipe_log(recipe, task, basename):
         if task is None:
             os.system("less %s" % get_latest(tempdir, basename))
         else:
-            # Latest log for this task, so just follow the symlink for now.
+            # Latest log for this task, so just follow the symlink.
             # TODO use get_latest?
             os.system("less %s/%s%s" % (tempdir, basename, task))
 
