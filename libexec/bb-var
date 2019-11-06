@@ -11,14 +11,17 @@ import bb
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='bb-var')
     parser.add_argument('variable', help='variable')
-    parser.add_argument('recipe', help='recipe name', nargs='?')
+    parser.add_argument('recipes', help='recipe names', nargs='*')
+    parser.add_argument('-u', '--unexpand', help='do not expand', action="store_true")
     args = parser.parse_args()
 
     with bb.tinfoil.Tinfoil() as tinfoil:
-        if args.recipe:
+        if args.recipes:
             tinfoil.prepare()
-            data = tinfoil.parse_recipe(args.recipe)
+            for recipe in args.recipes:
+                data = tinfoil.parse_recipe(recipe)
+                print(data.getVar(args.variable, expand=not args.unexpand))
         else:
             tinfoil.prepare(config_only=True)
             data = tinfoil.config_data
-        print(data.getVar(args.variable))
+            print(data.getVar(args.variable))
