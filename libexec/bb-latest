@@ -1,0 +1,27 @@
+#!/usr/bin/env python3
+# Usage: bb latest [recipe]
+
+import argparse
+import os
+import sys
+
+scripts_path = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
+sys.path = sys.path + [scripts_path + '/lib']
+import scriptpath
+scriptpath.add_bitbake_lib_path()
+scriptpath.add_oe_lib_path()
+
+import bb.tinfoil
+import oe.recipeutils
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='bb-latest')
+    parser.add_argument('recipe', help='recipe name')
+    args = parser.parse_args()
+
+    with bb.tinfoil.Tinfoil() as tinfoil:
+        tinfoil.prepare()
+        data = tinfoil.parse_recipe(args.recipe)
+        # TODO handle UPSTREAM_VERSION_UNKNOWN and UPSTREAM_CHECK_UNRELIABLE
+        uv = oe.recipeutils.get_recipe_upstream_version(data)
+        print(uv)
