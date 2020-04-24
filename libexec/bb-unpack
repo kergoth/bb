@@ -21,7 +21,10 @@ with bb.tinfoil.Tinfoil() as tinfoil:
     deploy_dir = d.getVar("DEPLOY_DIR_%s" % pkgformat.upper())
 
     recipe = tinfoil.get_recipe_info(args.package)
-
+    if not recipe:
+        print("Can not find recipe %s" % args.package)
+        sys.exit(1)
+        
     matches = glob.glob(os.path.join(deploy_dir, "*", "%s*%s-*.%s" % (recipe.pn, recipe.pv, pkgformat)))
     matches.sort(key=lambda x: len(x))
     filename = matches[0]
@@ -35,6 +38,9 @@ with bb.tinfoil.Tinfoil() as tinfoil:
         cpio = subprocess.check_output(["rpm2cpio.sh", filename])
         subprocess.check_output(["cpio", "--extract", "--quiet"], input=cpio, cwd=unpackdir)
         print("Unpacked to %s" % unpackdir)
+    elif pkgformat in ("deb", "ipk"):
+        # TODO use cpio/ar directly?
+        subprocess.check_output(["dpkg-deb", "--extract", filename, unpackdir])
+        print("Unpacked to %s" % unpackdir)
     else:
-        # TODO
         assert False
