@@ -1,0 +1,20 @@
+#!/usr/bin/env python3
+# Usage: bb sysroot [recipe]
+
+import argparse
+import subprocess
+import bbcmd
+import bb
+
+# TODO silence bitbake startup
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='bb-sysroot')
+    parser.add_argument('recipe', help='recipe')
+    args = parser.parse_args()
+
+    with bb.tinfoil.Tinfoil() as tinfoil:
+        tinfoil.prepare()
+        data = tinfoil.parse_recipe(args.recipe)
+        root = data.expand("${COMPONENTS_DIR}/${PACKAGE_ARCH}/${PN}")
+        for line in subprocess.check_output(["find", root, "-type", "f"]).decode("utf-8").splitlines():
+            print(line.replace(root, ""))
