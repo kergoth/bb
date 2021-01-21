@@ -1,0 +1,23 @@
+#!/usr/bin/env python3
+# Usage: bb depends [recipe]
+
+import argparse
+import os
+import sys
+import bbcmd
+import bb
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='bb-depends')
+    parser.add_argument('recipe', help='recipe name')
+    args = parser.parse_args()
+
+    with bb.tinfoil.Tinfoil() as tinfoil:
+        tinfoil.prepare(extra_features=[bb.cooker.CookerFeatures.BASEDATASTORE_TRACKING])
+        recipe = tinfoil.get_recipe_info(args.recipe)
+        print(recipe.depends)
+        for key in recipe._d:
+            value = recipe._d.getVarFlag(key, "depends")
+            if value:
+                print(key)
+                print(value)

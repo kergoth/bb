@@ -1,0 +1,19 @@
+#!/usr/bin/env python3
+# Usage: bb depends [recipe]
+
+import argparse
+import os
+import sys
+import bbcmd
+import bb
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='bb-depends')
+    parser.add_argument('recipe', help='recipe name')
+    args = parser.parse_args()
+
+    with bb.tinfoil.Tinfoil() as tinfoil:
+        tinfoil.prepare()
+        for recipe in tinfoil.all_recipes():
+            if args.recipe in recipe.depends:
+                print(recipe)
