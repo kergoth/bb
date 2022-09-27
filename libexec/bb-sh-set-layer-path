@@ -1,0 +1,11 @@
+#!/bin/bash
+# Usage: bb set-layer-path
+# Summary: Set PATH to include scripts/ in every layer.
+
+set -e
+
+while read -r -d: DIR; do
+    if [ -d "$DIR/scripts" ]; then
+        PATH="$PATH:$DIR/scripts"
+    fi
+done < <(bb var BBPATH | tail +2)
