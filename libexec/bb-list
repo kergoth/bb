@@ -6,56 +6,129 @@
 import logging
 import os
 import sys
-import bbcmd
+from collections import defaultdict
 
+import bb.event
+
+import bbcmd
 
 logger = logging.getLogger('bb.list')
 
 
+def iter_except(func, exception, first=None):
+      """Call a function repeatedly until an exception is raised.
+
+      Converts a call-until-exception interface to an iterator interface.
+      Like __builtin__.iter(func, sentinel) but uses an exception instead
+      of a sentinel to end the loop.
+
+      Examples:
+          bsddbiter = iter_except(db.next, bsddb.error, db.first)
+          heapiter = iter_except(functools.partial(heappop, h), IndexError)
+          dictiter = iter_except(d.popitem, KeyError)
+          dequeiter = iter_except(d.popleft, IndexError)
+          queueiter = iter_except(q.get_nowait, Queue.Empty)
+          setiter = iter_except(s.pop, KeyError)
+
+      """
+      try:
+          if first is not None:
+              yield first()
+          while 1:
+              yield func()
+      except exception:
+          pass
+
+
+def get_depgraph(tinfoil, targets, task='do_build'):
+    depgraph = None
+
+    tinfoil.set_event_mask(['bb.event.DepTreeGenerated', 'bb.command.CommandCompleted', 'bb.event.NoProvider', 'bb.command.CommandFailed', 'bb.command.CommandExit'])
+    if not tinfoil.run_command('generateDepTreeEvent', targets, task):
+        logger.critical('Error starting dep tree event command')
+        return 1
+
+    for event in iter_except(lambda: tinfoil.wait_event(0.25), Exception):
+        if event is None:
+            continue
+        if isinstance(event, bb.command.CommandCompleted):
+            break
+        elif isinstance(event, bb.command.CommandFailed):
+            return None, 'Error running command: %s' % event.error
+        elif isinstance(event, bb.command.CommandExit):
+            return None, 'Error running command: exited with %s' % event.exitcode
+        elif isinstance(event, bb.event.NoProvider):
+            if event._reasons:
+                return None, 'Nothing provides %s: %s' % (event._item, event._reasons)
+            else:
+                return None, 'Nothing provides %s.' % event._item
+        elif isinstance(event, bb.event.DepTreeGenerated):
+            depgraph = event._depgraph
+            break
+        elif isinstance(event, logging.LogRecord):
+            logger.handle(event)
+        else:
+            logger.warning('Unhandled event %s: %s' % (event.__class__.__name__, event))
+
+    return depgraph, None
+
+
+def walk_depends(depends, target, seen=None):
+    if seen is None:
+        seen = set()
+
+    if target in seen:
+        return
+    else:
+        seen.add(target)
+
+    for depend in depends[target]:
+        yield from walk_depends(depends, depend, seen)
+    yield target
+
+
 def list(args):
-    # tinfoil sets up log output for the bitbake loggers, but bb uses
-    # a separate namespace at this time
     bbcmd.setup_log_handler(logging.getLogger('bb'))
 
-    tinfoil = bbcmd.Tinfoil(output=sys.stderr)
-    tinfoil.prepare()
+    with bb.tinfoil.Tinfoil() as tinfoil:
+        tinfoil.prepare()
 
-    with bbcmd.status('Gathering preferred recipe filenames'):
+        recipes, provides = set(), defaultdict(set)
         if args.scope:
-            tinfoil.prepare_taskdata([args.scope])
-            filenames = tinfoil.target_filenames()
+            try:
+                recipe, task = args.scope.rsplit(':', 1)
+            except ValueError:
+                recipe, task = args.scope, 'do_build'
+
+            depgraph, error = get_depgraph(tinfoil, [recipe], task)
+            if error is not None:
+                sys.exit(error)
+
+            for item in walk_depends(depgraph['tdepends'], '%s.%s' % (recipe, task)):
+                recipe, task = item.rsplit('.', 1)
+                recipes.add(recipe)
+
+            for provide, (pn, version) in depgraph['providermap'].items():
+                if pn in recipes:
+                    provides[pn].add(provide)
         else:
-            filenames = tinfoil.all_preferred_filenames()
+            for mc in tinfoil.cooker.multiconfigs:
+                cache_data = tinfoil.cooker.recipecaches[mc]
+                pkg_pn = cache_data.pkg_pn
+                latest_versions, preferred_versions, required_versions = tinfoil.find_providers(mc)
+                for pn in pkg_pn:
+                    recipes.add(pn)
+                    pref_ver, pref_file = preferred_versions[pn]
 
-    cache_data = tinfoil.cooker.recipecaches['']
+                    provides[pn] = set(cache_data.fn_provides[pref_file])
+                    provides[pn].discard(pn)
 
-    global_data = tinfoil.config_data.createCopy()
-    bb.data.expandKeys(global_data)
-    bb.data.update_data(global_data)
-    global_data.setVar('PN', '{pn}')
-    global_data.setVar('PF', '{pf}')
-    global_data.setVar('P', '{p}')
-    global_provides = global_data.getVar('PROVIDES', True)
-
-    for fn in filenames:
-        pn = cache_data.pkg_fn[fn]
-        pe, pv, pr = cache_data.pkg_pepvpr[fn]
-        if pe:
-            pe_pv = pe + '_' + pv
-        else:
-            pe_pv = pv
-
-        pn_default_provides = global_provides.format(pn=pn,
-                                                     pf='{0}-{1}-{2}'.format(pn, pe_pv, pr),
-                                                     p='{0}-{1}'.format(pn, pv)).split()
-        provides = set(cache_data.fn_provides[fn]) - set(pn_default_provides)
-
-        print(pn)
-        for provide in provides:
-            print('  ' + provide)
+        for pn in sorted(recipes):
+            print(pn)
+            for provide in provides[pn]:
+                print('  ' + provide)
 
 
-# provide bb completions
 def main(arguments):
     parser = bbcmd.CompleteParser()
     parser.add_argument('-S', '--scope',
