@@ -86,20 +86,21 @@ def edit(args):
 
     editor = args.editor or os.getenv('VISUAL', os.getenv('EDITOR', 'vi'))
 
-    tinfoil = bbcmd.Tinfoil(output=sys.stderr)
-    tinfoil.prepare()
-    tinfoil.prepare_taskdata(args.targets)
+    with bbcmd.Tinfoil(output=sys.stderr) as tinfoil:
+        tinfoil.prepare()
+        tinfoil.prepare_taskdata(args.targets)
 
-    files_to_edit = targets_to_files(tinfoil, args.targets,
-                                     with_includes=not args.just_recipes)
+        files_to_edit = targets_to_files(tinfoil, args.targets,
+                                             with_includes=not args.just_recipes)
+
     if files_to_edit is None:
         return 1
-
-    files_to_edit = list(filter(lambda f: os.path.exists(f), files_to_edit))
-    if args.prompt:
-        prompt(files_to_edit, editor)
     else:
-        run_editor(files_to_edit, editor)
+        files_to_edit = list(filter(lambda f: os.path.exists(f), files_to_edit))
+        if args.prompt:
+            prompt(files_to_edit, editor)
+        else:
+            run_editor(files_to_edit, editor)
 
 
 # provide bb completions
