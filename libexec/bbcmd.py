@@ -311,7 +311,7 @@ def run_main(main):
     signal.signal(signal.SIGTERM, sigterm_exception)
     try:
         sys.exit(main(sys.argv[1:]) or 0)
-    except bb.BBHandledException:
+    except (bb.BBHandledException, bb.tinfoil.TinfoilUIException):
         sys.exit(1)
     except KeyboardInterrupt:
         signal.signal(signal.SIGINT, signal.SIG_DFL)
