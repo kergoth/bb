@@ -31,16 +31,19 @@ class Tinfoil(bb.tinfoil.Tinfoil):
     def __init__(self, output=sys.stdout, tracking=False):
         super(Tinfoil, self).__init__(output, tracking)
         self.taskdata = None
-        self.localdata = self.cooker.data
+        self.output = output
+
+    def prepare(self, config_only=False, config_params=None, quiet=0, extra_features=None):
+        super().prepare(config_only, config_params, quiet, extra_features)
+        self.localdata = self.cooker_data
 
         # Improved logger handling/formatting
-        if output is not None:
+        if self.output is not None:
             self.logger.removeHandler(self._log_hdlr)
-            setup_log_handler(self.logger, output)
+            setup_log_handler(self.logger, self.output)
 
         # Quiet messages we don't care about in this context
         bb.taskdata.logger.setLevel(logging.CRITICAL)
-
 
     def prepare_taskdata(self, provided=None, rprovided=None):
         self.cache_data = self.cooker.recipecaches['']
