@@ -1,19 +1,15 @@
-#!/bin/bash
+#!/usr/bin/env python3
 # Usage: bb latest recipe
 
-set -euo pipefail
-
-import argparse
 import sys
 from pathlib import Path
 
 import bb.tinfoil
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='bb-latest')
-    parser.add_argument('recipe', help='recipe name')
-    args = parser.parse_args()
+import bbcmd
 
+
+def latest(args):
     with bb.tinfoil.Tinfoil() as tinfoil:
         tinfoil.prepare()
 
@@ -26,3 +22,20 @@ if __name__ == "__main__":
         # TODO handle UPSTREAM_VERSION_UNKNOWN and UPSTREAM_CHECK_UNRELIABLE
         uv = oe.recipeutils.get_recipe_upstream_version(data)
         print(uv)
+
+
+# provide bb completions
+def main(arguments):
+    parser = bbcmd.CompleteParser()
+    parser.add_argument('recipe', help='recipe name')
+
+    args = parser.parse_args(arguments)
+    if args is None:
+        # showing completions
+        return
+    else:
+        return latest(args)
+
+
+if __name__ == '__main__':
+    bbcmd.run_main(main)
