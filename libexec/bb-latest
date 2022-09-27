@@ -1,18 +1,13 @@
-#!/usr/bin/env python3
-# Usage: bb latest [recipe]
+#!/bin/bash
+# Usage: bb latest recipe
+
+set -euo pipefail
 
 import argparse
-import os
 import sys
-
-scripts_path = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
-sys.path = sys.path + [scripts_path + '/lib']
-import scriptpath
-scriptpath.add_bitbake_lib_path()
-scriptpath.add_oe_lib_path()
+from pathlib import Path
 
 import bb.tinfoil
-import oe.recipeutils
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='bb-latest')
@@ -21,6 +16,12 @@ if __name__ == "__main__":
 
     with bb.tinfoil.Tinfoil() as tinfoil:
         tinfoil.prepare()
+
+        corelib = Path(tinfoil.config_data.getVar('COREBASE')) / 'meta' / 'lib'
+        sys.path.insert(0, str(corelib))
+
+        import oe.recipeutils
+
         data = tinfoil.parse_recipe(args.recipe)
         # TODO handle UPSTREAM_VERSION_UNKNOWN and UPSTREAM_CHECK_UNRELIABLE
         uv = oe.recipeutils.get_recipe_upstream_version(data)
