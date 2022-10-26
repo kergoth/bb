@@ -1,0 +1,15 @@
+#!/bin/bash
+
+set -euo pipefail
+
+tmpfile=$(mktemp -t "${0##*/}.XXXXXX")
+trap 'rm -f "$tmpfile"' EXIT INT TERM
+
+if ! bitbake-getvar --value "$@" >"$tmpfile" || grep -q "^ERROR:" "$tmpfile"; then
+    cat "$tmpfile"
+    exit 1
+fi
+
+grep -v '^[A-Z]*:' "$tmpfile" |
+    tr -s '[:blank:]' '\n' |
+    grep -v '^$'
